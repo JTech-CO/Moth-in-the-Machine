@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Moth in the Machine">
+  <rect width="64" height="64" rx="12" fill="#0a0e17" />
+  <path d="M30 25 15 15l3 20 12 8V25Zm4 0 15-10-3 20-12 8V25Z" fill="#f0c14b" opacity=".9" />
+  <path d="M32 20v29m-5-19h10M28 46l4 5 4-5" fill="none" stroke="#e8e4d9" stroke-linecap="round" stroke-width="3" />
+</svg>
