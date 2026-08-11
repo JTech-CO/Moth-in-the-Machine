@@ -4,7 +4,7 @@ import {
   type PerformanceMonitorApi,
 } from '@react-three/drei/core/PerformanceMonitor.js';
 
-import { CameraRig } from '@/components/three/CameraRig';
+import { PlayerFlightRig } from '@/components/three/PlayerFlightRig';
 import { RelayArchitecture } from '@/components/three/RelayArchitecture';
 import {
   CORRIDOR_SECTION_Z,
@@ -124,7 +124,7 @@ export function StageEnvironment({ onPerformanceFactorChange }: StageEnvironment
         <VacuumTube key={position.join(':')} position={position} />
       ))}
 
-      <CameraRig />
+      <PlayerFlightRig />
       <AdaptiveSceneDpr onPerformanceFactorChange={onPerformanceFactorChange} />
     </>
   );

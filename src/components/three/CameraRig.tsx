@@ -1,41 +1,67 @@
-import { useMemo, useRef } from 'react';
-import { Vector3 } from 'three';
+import { useRef, type MutableRefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Vector3 } from 'three';
 
-import { CAMERA_CONFIG } from '@/components/three/sceneConfig';
+import { CAMERA_CONFIG, CAMERA_FOLLOW_CONFIG } from '@/components/three/sceneConfig';
+import type { LookAngles } from '@/utils/playerControls';
+import type { PlayerSimulationState } from '@/utils/playerPhysics';
 
-export function CameraRig() {
-  const landscapePosition = useMemo(() => new Vector3(...CAMERA_CONFIG.position), []);
-  const landscapeTarget = useMemo(() => new Vector3(...CAMERA_CONFIG.target), []);
-  const portraitPosition = useMemo(() => new Vector3(...CAMERA_CONFIG.portraitPosition), []);
-  const portraitTarget = useMemo(() => new Vector3(...CAMERA_CONFIG.portraitTarget), []);
-  const desiredPosition = useRef(landscapePosition.clone());
-  const desiredTarget = useRef(landscapeTarget.clone());
-  const activeTarget = useRef(landscapeTarget.clone());
-  const prefersReducedMotion = useMemo(
-    () =>
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    [],
-  );
+interface CameraRigProps {
+  readonly lookAngles: MutableRefObject<LookAngles>;
+  readonly playerState: MutableRefObject<PlayerSimulationState>;
+}
 
-  useFrame(({ camera, clock, size }, delta) => {
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.max(minimum, Math.min(maximum, value));
+}
+
+export function CameraRig({ lookAngles, playerState }: CameraRigProps) {
+  const desiredPosition = useRef(new Vector3(...CAMERA_CONFIG.position));
+  const desiredTarget = useRef(new Vector3(...CAMERA_CONFIG.target));
+  const activeTarget = useRef(new Vector3(...CAMERA_CONFIG.target));
+
+  useFrame(({ camera, size }, delta) => {
+    const { position } = playerState.current;
+    const { yaw, pitch } = lookAngles.current;
     const portrait = size.width / size.height <= CAMERA_CONFIG.portraitAspectMax;
-    const basePosition = portrait ? portraitPosition : landscapePosition;
-    const baseTarget = portrait ? portraitTarget : landscapeTarget;
-    const sway = prefersReducedMotion
-      ? 0
-      : Math.sin(clock.elapsedTime * 0.24) * CAMERA_CONFIG.idleSway;
-    const verticalDrift = prefersReducedMotion ? 0 : Math.cos(clock.elapsedTime * 0.18) * 0.035;
-    const damping = 1 - Math.exp(-delta * 1.8);
+    const distance = portrait
+      ? CAMERA_FOLLOW_CONFIG.portraitDistance
+      : CAMERA_FOLLOW_CONFIG.landscapeDistance;
+    const yawSine = Math.sin(yaw);
+    const yawCosine = Math.cos(yaw);
+    const pitchCosine = Math.cos(pitch);
+    const forwardX = yawSine * pitchCosine;
+    const forwardY = Math.sin(pitch);
+    const forwardZ = -yawCosine * pitchCosine;
+    const positionDamping = 1 - Math.exp(-CAMERA_FOLLOW_CONFIG.positionDamping * delta);
+    const targetDamping = 1 - Math.exp(-CAMERA_FOLLOW_CONFIG.targetDamping * delta);
 
-    desiredPosition.current.copy(basePosition);
-    desiredPosition.current.x += sway;
-    desiredPosition.current.y += verticalDrift;
-    desiredTarget.current.copy(baseTarget);
+    desiredPosition.current.set(
+      clamp(
+        position.x - yawSine * distance,
+        -CAMERA_FOLLOW_CONFIG.maximumAbsX,
+        CAMERA_FOLLOW_CONFIG.maximumAbsX,
+      ),
+      clamp(
+        position.y + CAMERA_FOLLOW_CONFIG.height,
+        CAMERA_FOLLOW_CONFIG.minimumY,
+        CAMERA_FOLLOW_CONFIG.maximumY,
+      ),
+      clamp(
+        position.z + yawCosine * distance,
+        CAMERA_FOLLOW_CONFIG.minimumZ,
+        CAMERA_FOLLOW_CONFIG.maximumZ,
+      ),
+    );
+    desiredTarget.current.set(
+      position.x + forwardX * CAMERA_FOLLOW_CONFIG.lookAhead,
+      position.y + forwardY * CAMERA_FOLLOW_CONFIG.lookAhead,
+      position.z + forwardZ * CAMERA_FOLLOW_CONFIG.lookAhead,
+    );
 
-    camera.position.lerp(desiredPosition.current, damping);
-    activeTarget.current.lerp(desiredTarget.current, damping);
+    camera.position.lerp(desiredPosition.current, positionDamping);
+    activeTarget.current.lerp(desiredTarget.current, targetDamping);
+    camera.up.set(0, 1, 0);
     camera.lookAt(activeTarget.current);
   });
 

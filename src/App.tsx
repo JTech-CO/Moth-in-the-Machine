@@ -14,9 +14,9 @@ import type { SceneAvailability } from '@/components/three/SceneCanvas';
 const SceneCanvas = lazy(() => import('@/components/three/SceneCanvas'));
 
 const environmentChecks = [
-  ['RELAY ARRAY', 'ONLINE'],
-  ['VACUUM LIGHTS', 'STABLE'],
-  ['CAMERA RIG', 'CALIBRATED'],
+  ['FLIGHT INPUT', 'ONLINE'],
+  ['INERTIA MODEL', 'STABLE'],
+  ['COLLISION AABB', 'ARMED'],
 ] as const;
 
 type SceneStatus = 'loading' | SceneAvailability;
@@ -38,7 +38,7 @@ class SceneErrorBoundary extends Component<SceneErrorBoundaryProps, SceneErrorBo
   }
 
   componentDidCatch(error: unknown, errorInfo: ErrorInfo): void {
-    console.error('The M4 relay bay scene failed to render.', error, errorInfo.componentStack);
+    console.error('The M5 flight scene failed to render.', error, errorInfo.componentStack);
     this.props.onError();
   }
 
@@ -90,8 +90,8 @@ function App() {
         </h1>
         <p className={styles.summary}>
           {sceneReady
-            ? '릴레이 베이 환경 동기화 완료. 비행 제어 연결 전 내부 회랑을 계측하고 있습니다.'
-            : '릴레이 베이 환경을 동기화하고 있습니다. 3D 렌더러를 준비하는 중입니다.'}
+            ? '비행 제어 온라인. 화면을 클릭한 뒤 나방을 릴레이 회랑 안에서 조종하세요.'
+            : '비행 시스템을 동기화하고 있습니다. 3D 렌더러를 준비하는 중입니다.'}
         </p>
 
         <dl className={styles.systems}>
@@ -105,10 +105,10 @@ function App() {
       </section>
 
       <footer className={styles.footer}>
-        <span>M4 · 3D RELAY BAY FOUNDATION</span>
+        <span>CLICK · WASD / ARROWS + MOUSE · SPACE MODE</span>
         <span className={sceneReady ? styles.ready : styles.pending}>
           <span aria-hidden="true">{sceneReady ? '●' : '○'}</span>{' '}
-          {sceneReady ? 'ENVIRONMENT ONLINE' : 'ENVIRONMENT SYNCING'}
+          {sceneReady ? 'M5 · FLIGHT SYSTEMS ONLINE' : 'FLIGHT SYSTEMS SYNCING'}
         </span>
       </footer>
     </main>

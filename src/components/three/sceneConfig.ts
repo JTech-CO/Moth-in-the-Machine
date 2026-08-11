@@ -12,6 +12,19 @@ export const SCENE_COLORS = {
 
 export type SceneVector = readonly [number, number, number];
 
+export interface SceneBounds {
+  readonly min: {
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+  };
+  readonly max: {
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+  };
+}
+
 export interface RelayPosition {
   readonly x: number;
   readonly y: number;
@@ -28,6 +41,57 @@ export const CAMERA_CONFIG = {
   far: 80,
   idleSway: 0.12,
 } as const;
+
+export const CAMERA_FOLLOW_CONFIG = {
+  landscapeDistance: 3.2,
+  portraitDistance: 4,
+  height: 0.82,
+  lookAhead: 1.65,
+  positionDamping: 6.5,
+  targetDamping: 9,
+  minimumY: -1.88,
+  maximumY: 2.48,
+  maximumAbsX: 3.68,
+  minimumZ: -26.35,
+  maximumZ: 7.5,
+} as const;
+
+export const PLAYER_CONFIG = {
+  spawn: [0, -0.25, 3.55] as SceneVector,
+  halfExtents: [0.38, 0.16, 0.34] as SceneVector,
+  acceleration: 10,
+  maximumSpeed: 4.2,
+  maximumVerticalSpeed: 3.2,
+  drag: 3.2,
+  hoverVerticalDamping: 5.5,
+  maximumDescentSpeed: 2,
+  landingVerticalResponse: 5,
+  fixedDelta: 1 / 120,
+  maximumFrameDelta: 0.1,
+  maximumSubsteps: 8,
+  diagnosticIntervalSeconds: 0.75,
+} as const;
+
+export const CORRIDOR_INTERIOR_BOUNDS: SceneBounds = {
+  min: { x: -4.03, y: -2.21, z: -26.82 },
+  max: { x: 4.03, y: 2.71, z: 4.99 },
+};
+
+const [playerHalfX, playerHalfY, playerHalfZ] = PLAYER_CONFIG.halfExtents;
+
+// Minkowski-insetting the visible shell by the moth AABB prevents its geometry crossing a wall.
+export const PLAYER_CENTER_BOUNDS: SceneBounds = {
+  min: {
+    x: CORRIDOR_INTERIOR_BOUNDS.min.x + playerHalfX,
+    y: CORRIDOR_INTERIOR_BOUNDS.min.y + playerHalfY,
+    z: CORRIDOR_INTERIOR_BOUNDS.min.z + playerHalfZ,
+  },
+  max: {
+    x: CORRIDOR_INTERIOR_BOUNDS.max.x - playerHalfX,
+    y: CORRIDOR_INTERIOR_BOUNDS.max.y - playerHalfY,
+    z: CORRIDOR_INTERIOR_BOUNDS.max.z - playerHalfZ,
+  },
+};
 
 export const CANVAS_CONFIG = {
   dpr: [1, 1.5] as const,

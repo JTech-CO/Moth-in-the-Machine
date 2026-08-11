@@ -3,13 +3,17 @@ import { describe, expect, it } from 'vitest';
 import {
   CABINET_INSTANCE_COUNT,
   CAMERA_CONFIG,
+  CAMERA_FOLLOW_CONFIG,
   CANVAS_CONFIG,
   calculateAdaptiveDpr,
+  CORRIDOR_INTERIOR_BOUNDS,
   CORRIDOR_SECTION_Z,
   createRelayGrid,
   FOG_CONFIG,
   getPerformanceBounds,
   PERFORMANCE_CONFIG,
+  PLAYER_CENTER_BOUNDS,
+  PLAYER_CONFIG,
   RAIL_INSTANCE_COUNT,
   RELAY_GRID,
   RELAY_INSTANCE_COUNT,
@@ -17,7 +21,7 @@ import {
   VACUUM_TUBE_POSITIONS,
 } from '@/components/three/sceneConfig';
 
-describe('M4 scene configuration', () => {
+describe('M5 scene configuration', () => {
   it('uses the documented 1947 laboratory design tokens', () => {
     expect(SCENE_COLORS).toMatchObject({
       background: '#0a0e17',
@@ -47,6 +51,82 @@ describe('M4 scene configuration', () => {
       far: 80,
     });
     expect(FOG_CONFIG.near).toBeLessThan(FOG_CONFIG.far);
+  });
+  it('keeps player and follow-camera tuning finite and ordered', () => {
+    const followValues = Object.values(CAMERA_FOLLOW_CONFIG);
+    const playerValues = [
+      ...PLAYER_CONFIG.spawn,
+      ...PLAYER_CONFIG.halfExtents,
+      PLAYER_CONFIG.acceleration,
+      PLAYER_CONFIG.maximumSpeed,
+      PLAYER_CONFIG.maximumVerticalSpeed,
+      PLAYER_CONFIG.drag,
+      PLAYER_CONFIG.hoverVerticalDamping,
+      PLAYER_CONFIG.maximumDescentSpeed,
+      PLAYER_CONFIG.landingVerticalResponse,
+      PLAYER_CONFIG.fixedDelta,
+      PLAYER_CONFIG.maximumFrameDelta,
+      PLAYER_CONFIG.maximumSubsteps,
+      PLAYER_CONFIG.diagnosticIntervalSeconds,
+    ];
+
+    expect(followValues.every(Number.isFinite)).toBe(true);
+    expect(playerValues.every(Number.isFinite)).toBe(true);
+    expect(CAMERA_FOLLOW_CONFIG.landscapeDistance).toBeGreaterThan(0);
+    expect(CAMERA_FOLLOW_CONFIG.portraitDistance).toBeGreaterThan(0);
+    expect(CAMERA_FOLLOW_CONFIG.positionDamping).toBeGreaterThan(0);
+    expect(CAMERA_FOLLOW_CONFIG.targetDamping).toBeGreaterThan(0);
+    expect(CAMERA_FOLLOW_CONFIG.minimumY).toBeLessThan(CAMERA_FOLLOW_CONFIG.maximumY);
+    expect(CAMERA_FOLLOW_CONFIG.minimumZ).toBeLessThan(CAMERA_FOLLOW_CONFIG.maximumZ);
+    expect(CAMERA_FOLLOW_CONFIG.maximumAbsX).toBeGreaterThan(0);
+    expect(PLAYER_CONFIG.halfExtents.every((extent) => extent > 0)).toBe(true);
+    expect(PLAYER_CONFIG.acceleration).toBeGreaterThan(0);
+    expect(PLAYER_CONFIG.maximumSpeed).toBeGreaterThan(0);
+    expect(PLAYER_CONFIG.maximumVerticalSpeed).toBeGreaterThanOrEqual(
+      PLAYER_CONFIG.maximumDescentSpeed,
+    );
+    expect(PLAYER_CONFIG.fixedDelta).toBeGreaterThan(0);
+    expect(PLAYER_CONFIG.fixedDelta).toBeLessThan(PLAYER_CONFIG.maximumFrameDelta);
+    expect(Number.isSafeInteger(PLAYER_CONFIG.maximumSubsteps)).toBe(true);
+    expect(PLAYER_CONFIG.maximumSubsteps).toBeGreaterThan(0);
+  });
+
+  it('keeps finite player bounds ordered with the spawn inside them', () => {
+    const spawnByAxis = {
+      x: PLAYER_CONFIG.spawn[0],
+      y: PLAYER_CONFIG.spawn[1],
+      z: PLAYER_CONFIG.spawn[2],
+    };
+
+    for (const axis of ['x', 'y', 'z'] as const) {
+      const minimum = PLAYER_CENTER_BOUNDS.min[axis];
+      const maximum = PLAYER_CENTER_BOUNDS.max[axis];
+      const spawn = spawnByAxis[axis];
+
+      expect([minimum, maximum, spawn].every(Number.isFinite)).toBe(true);
+      expect(minimum).toBeLessThan(maximum);
+      expect(spawn).toBeGreaterThanOrEqual(minimum);
+      expect(spawn).toBeLessThanOrEqual(maximum);
+    }
+
+    expect(PLAYER_CENTER_BOUNDS.min.x).toBe(
+      CORRIDOR_INTERIOR_BOUNDS.min.x + PLAYER_CONFIG.halfExtents[0],
+    );
+    expect(PLAYER_CENTER_BOUNDS.min.y).toBe(
+      CORRIDOR_INTERIOR_BOUNDS.min.y + PLAYER_CONFIG.halfExtents[1],
+    );
+    expect(PLAYER_CENTER_BOUNDS.min.z).toBe(
+      CORRIDOR_INTERIOR_BOUNDS.min.z + PLAYER_CONFIG.halfExtents[2],
+    );
+    expect(PLAYER_CENTER_BOUNDS.max.x).toBe(
+      CORRIDOR_INTERIOR_BOUNDS.max.x - PLAYER_CONFIG.halfExtents[0],
+    );
+    expect(PLAYER_CENTER_BOUNDS.max.y).toBe(
+      CORRIDOR_INTERIOR_BOUNDS.max.y - PLAYER_CONFIG.halfExtents[1],
+    );
+    expect(PLAYER_CENTER_BOUNDS.max.z).toBe(
+      CORRIDOR_INTERIOR_BOUNDS.max.z - PLAYER_CONFIG.halfExtents[2],
+    );
   });
 
   it('adapts DPR within the configured quality budget', () => {

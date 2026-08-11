@@ -54,9 +54,9 @@ export default function SceneCanvas({ onAvailabilityChange }: SceneCanvasProps) 
   }, []);
 
   return (
-    <section className={styles.viewport} aria-label="Harvard Mark II relay bay 3D preview">
+    <section className={styles.viewport} aria-label="Harvard Mark II relay bay moth flight">
       <Canvas
-        data-render-surface="m4-relay-bay"
+        data-render-surface="m5-player-flight"
         camera={{
           position: [...CAMERA_CONFIG.position],
           fov: CAMERA_CONFIG.fov,
@@ -85,8 +85,8 @@ export default function SceneCanvas({ onAvailabilityChange }: SceneCanvasProps) 
       </Canvas>
 
       <p className={styles.visuallyHidden}>
-        어두운 Mark II 컴퓨터 내부 회랑에 금속 릴레이 랙, 황동 접점, 호박색 진공관이 배치되어
-        있습니다.
+        어두운 Mark II 컴퓨터 내부 회랑에서 나방을 조종합니다. 화면을 클릭한 뒤 WASD 또는 화살표
+        키와 마우스로 비행하고 Space 키로 호버와 착륙 준비 상태를 전환합니다.
       </p>
     </section>
   );

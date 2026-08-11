@@ -63,7 +63,7 @@ vi.mock('@/components/three/StageEnvironment', () => ({
   },
 }));
 
-describe('M4 scene canvas contract', () => {
+describe('M5 scene canvas contract', () => {
   beforeEach(() => {
     captured.canvas = null;
     captured.stageEnvironment = null;
@@ -79,7 +79,7 @@ describe('M4 scene canvas contract', () => {
     expect(markup).toContain('id="project-title"');
     expect(markup).toContain('Moth');
     expect(markup).toContain('Machine');
-    expect(markup).toContain('ENVIRONMENT SYNCING');
+    expect(markup).toContain('FLIGHT SYSTEMS SYNCING');
     expect(markup).toContain('INITIALIZING RELAY BAY');
   });
 
@@ -93,8 +93,8 @@ describe('M4 scene canvas contract', () => {
     const canvas = captured.canvas;
 
     expect(canvas).not.toBeNull();
-    expect(markup).toContain('Harvard Mark II relay bay 3D preview');
-    expect(canvas?.['data-render-surface']).toBe('m4-relay-bay');
+    expect(markup).toContain('Harvard Mark II relay bay moth flight');
+    expect(canvas?.['data-render-surface']).toBe('m5-player-flight');
     expect(canvas?.camera).toEqual({
       position: [...CAMERA_CONFIG.position],
       fov: CAMERA_CONFIG.fov,
