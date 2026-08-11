@@ -26,6 +26,6 @@ pnpm format:check
 ## 구현 단계
 
 개발은 [작업 하네스](docs/Moth%20in%20the%20Machine_하네스.md)의 M1 → M9 게이트 순서를 따릅니다. 현재 상태와 다음 작업은 [PROGRESS.md](PROGRESS.md)를 기준으로 인계합니다.
-M1 기반과 M2 핵심 도메인 로직이 완료되어 다음 진입 단계는 M3 상태 관리·영속화입니다.
+M1 기반, M2 핵심 도메인 로직, M3 상태 관리·영속화가 완료되었습니다. 다음 진입 단계는 M4 3D 렌더링 기반입니다.
 
-Three.js, React Three Fiber, Zustand는 각각 하네스가 지정한 M4와 M3 이전에는 도입하지 않습니다.
+M3는 Zustand 5.0.14를 사용합니다. 진행도와 설정은 `mothProgress` schema v1으로 저장하고, player·timer·result 같은 세션 상태는 새로고침 때 초기화합니다. Three.js와 React Three Fiber는 M4에서 도입합니다.

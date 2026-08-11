@@ -1,0 +1,57 @@
+import type { StarRating } from '@/utils/starCalculator';
+import type { Vec3 } from '@/utils/collision';
+
+export type CompletedStarRating = Exclude<StarRating, 0>;
+export type SessionStatus = 'idle' | 'playing' | 'cleared' | 'failed';
+
+export interface PlayerState {
+  readonly health: number;
+  readonly position: Vec3;
+  readonly velocity: Vec3;
+  readonly isLanded: boolean;
+}
+
+export interface GameResult {
+  readonly stageId: number;
+  readonly timeMs: number;
+  readonly remainingHealth: number;
+  readonly stars: StarRating;
+  readonly timestamp: Date;
+}
+
+export interface StageProgress {
+  readonly stageId: number;
+  readonly bestTimeMs: number;
+  readonly bestStars: CompletedStarRating;
+}
+
+export interface GameProgress {
+  readonly completedStages: readonly StageProgress[];
+  readonly totalStars: number;
+}
+
+export interface GameSettings {
+  readonly showControlHints: boolean;
+}
+
+export function createDefaultPlayerState(): PlayerState {
+  return {
+    health: 100,
+    position: { x: 0, y: 0, z: 0 },
+    velocity: { x: 0, y: 0, z: 0 },
+    isLanded: false,
+  };
+}
+
+export function createDefaultProgress(): GameProgress {
+  return {
+    completedStages: [],
+    totalStars: 0,
+  };
+}
+
+export function createDefaultSettings(): GameSettings {
+  return {
+    showControlHints: true,
+  };
+}
