@@ -1,57 +1,116 @@
-import styles from '@/App.module.scss';
+import {
+  Component,
+  lazy,
+  Suspense,
+  useCallback,
+  useState,
+  type ErrorInfo,
+  type ReactNode,
+} from 'react';
 
-const foundationChecks = [
-  ['REACT CORE', 'ONLINE'],
-  ['TYPE SYSTEM', 'ARMED'],
-  ['RELAY MAP', 'STANDBY'],
+import styles from '@/App.module.scss';
+import type { SceneAvailability } from '@/components/three/SceneCanvas';
+
+const SceneCanvas = lazy(() => import('@/components/three/SceneCanvas'));
+
+const environmentChecks = [
+  ['RELAY ARRAY', 'ONLINE'],
+  ['VACUUM LIGHTS', 'STABLE'],
+  ['CAMERA RIG', 'CALIBRATED'],
 ] as const;
 
-function App() {
+type SceneStatus = 'loading' | SceneAvailability;
+
+interface SceneErrorBoundaryProps {
+  readonly children: ReactNode;
+  readonly onError: () => void;
+}
+
+interface SceneErrorBoundaryState {
+  readonly hasError: boolean;
+}
+
+class SceneErrorBoundary extends Component<SceneErrorBoundaryProps, SceneErrorBoundaryState> {
+  state: SceneErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): SceneErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown, errorInfo: ErrorInfo): void {
+    console.error('The M4 relay bay scene failed to render.', error, errorInfo.componentStack);
+    this.props.onError();
+  }
+
+  render(): ReactNode {
+    return this.state.hasError ? <SceneFailure /> : this.props.children;
+  }
+}
+
+function SceneLoading() {
   return (
-    <main
-      className={`${styles.screen} relative isolate flex min-h-dvh items-center justify-center p-5`}
-    >
-      <div className={styles.glow} aria-hidden="true" />
-      <section
-        className={`${styles.panel} w-full max-w-3xl overflow-hidden rounded-sm border border-brass/40 p-6 sm:p-10`}
-        aria-labelledby="project-title"
-      >
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-amber/20 pb-4 font-mono text-[0.7rem] tracking-[0.16em] text-muted sm:text-xs">
-          <span>HARVARD COMPUTATION LABORATORY</span>
-          <span>MARK II · 1947</span>
-        </header>
+    <div className={styles.loading} role="status">
+      <span className={styles.loadingLight} aria-hidden="true" />
+      INITIALIZING RELAY BAY
+    </div>
+  );
+}
 
-        <div className="mt-8 flex items-center gap-3 font-mono text-xs tracking-[0.2em] text-amber">
-          <span className={styles.statusLight} aria-hidden="true" />
-          <span>MACHINE STATUS · FOUNDATION ONLINE</span>
-        </div>
+function SceneFailure() {
+  return (
+    <div className={styles.failure} role="alert">
+      <div>
+        <span>RELAY BAY · FAULT</span>
+        <strong>3D 환경을 불러오지 못했습니다.</strong>
+        <p>페이지를 새로고침하거나 최신 브라우저에서 다시 시도해 주세요.</p>
+      </div>
+    </div>
+  );
+}
 
-        <h1
-          id="project-title"
-          className="mt-5 font-mono text-4xl font-bold uppercase leading-none tracking-[-0.05em] text-cream sm:text-6xl"
-        >
-          Moth <span className="text-amber">in the</span> Machine
+function App() {
+  const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading');
+  const markSceneUnavailable = useCallback(() => setSceneStatus('unavailable'), []);
+  const sceneReady = sceneStatus === 'ready';
+
+  return (
+    <main className={styles.screen}>
+      <SceneErrorBoundary onError={markSceneUnavailable}>
+        <Suspense fallback={<SceneLoading />}>
+          <SceneCanvas onAvailabilityChange={setSceneStatus} />
+        </Suspense>
+      </SceneErrorBoundary>
+
+      <div className={styles.vignette} aria-hidden="true" />
+
+      <section className={styles.readout} aria-labelledby="project-title">
+        <p className={styles.eyebrow}>HARVARD COMPUTATION LABORATORY · MARK II · 1947</p>
+        <h1 id="project-title" className={styles.title}>
+          Moth <span>in the</span> Machine
         </h1>
-
-        <p className="mt-5 max-w-xl font-sans text-sm leading-7 text-muted sm:text-base">
-          최초의 컴퓨터 버그가 다시 움직이기 시작했습니다. 비행 시스템 연결을 위한 기반 회로가
-          준비되었습니다.
+        <p className={styles.summary}>
+          {sceneReady
+            ? '릴레이 베이 환경 동기화 완료. 비행 제어 연결 전 내부 회랑을 계측하고 있습니다.'
+            : '릴레이 베이 환경을 동기화하고 있습니다. 3D 렌더러를 준비하는 중입니다.'}
         </p>
 
-        <dl className="mt-9 grid gap-px border border-amber/15 bg-amber/15 sm:grid-cols-3">
-          {foundationChecks.map(([label, value]) => (
-            <div key={label} className="bg-panel/95 px-4 py-3">
-              <dt className="font-sans text-[0.65rem] tracking-[0.14em] text-muted">{label}</dt>
-              <dd className="mt-1 font-mono text-sm text-cream">{value}</dd>
+        <dl className={styles.systems}>
+          {environmentChecks.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{sceneReady ? value : 'SYNCING'}</dd>
             </div>
           ))}
         </dl>
-
-        <footer className="mt-8 flex items-center justify-between gap-4 font-mono text-[0.65rem] tracking-[0.14em] text-muted">
-          <span>M1 · RELAY BAY FOUNDATION</span>
-          <span aria-label="System ready">● READY</span>
-        </footer>
       </section>
+
+      <footer className={styles.footer}>
+        <span>M4 · 3D RELAY BAY FOUNDATION</span>
+        <span className={sceneReady ? styles.ready : styles.pending}>
+          <span aria-hidden="true">{sceneReady ? '●' : '○'}</span>{' '}
+          {sceneReady ? 'ENVIRONMENT ONLINE' : 'ENVIRONMENT SYNCING'}
+        </span>
+      </footer>
     </main>
   );
 }
