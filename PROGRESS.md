@@ -2,7 +2,7 @@
 
 ## 현재 phase
 
-M7 — HUD & UI 컴포넌트 (완료, 사용자 재수동검수 통과 및 커밋·푸시 승인)
+M8 — 결과 화면 & 공유 이미지 완료 (2026-08-14 실제 브라우저 수동 게이트 통과, 커밋·푸시 승인)
 
 ## 직전에 끝낸 것
 
@@ -63,11 +63,20 @@ M7 — HUD & UI 컴포넌트 (완료, 사용자 재수동검수 통과 및 커�
 - GameHud root와 DamageOverlay를 Html 표면 기준 `position: absolute` full surface로 바꾸고, world origin의 behind-camera 숨김을 피하도록 Html anchor를 camera-forward 위치로 이동
 - StageEnvironment HUD 계층, HudVisibility, DamageOverlay 가시성 회귀 테스트 추가
 - 2026-08-14 사용자 재수동 실플레이에서 stage·health·timer·minimap UI와 피격 오버레이가 정상 표시됨을 확인해 0×0 HUD 회귀 수정 게이트 통과
+- M6 임시 clear/fail 중앙 안내를 clear·fail 공용 React Portal `ResultScreen`으로 교체하고 결과별 재시작·단계 목록 복귀·공유 동작 제공
+- terminal 순간의 stage·시간·체력·별·timestamp를 결과 스냅샷으로 고정하고, 단일 불변 `ResultPresentation`을 화면·공유 텍스트·공유 이미지가 함께 사용하도록 연결
+- 치명 피해가 HP 0·0별의 실패 스냅샷을 남기며 이후 늦은 프레임 입력이 terminal 결과를 바꾸지 않는 계약 보강
+- Courier 계열 타이프라이터 서체, 크림 종이, 테이프와 vector 나방 표본, 별·시간·HP·해시태그를 담은 1080×1080 로그북 Canvas PNG 구현
+- OffscreenCanvas 우선 및 생성·context·PNG 인코딩 실패 시 HTMLCanvasElement 재시도, 폰트 로딩 timeout 구현
+- 클릭 스택 내 `ClipboardItem` PNG 복사, 자동 텍스트 폴백과 항상 보이는 `COPY RESULT TEXT`, 다운로드 뒤 object URL 지연 revoke로 브라우저 호환 경계 보강
+- ResultScreen의 단계 복귀 초기 focus, 전역 R 재시작·비대화형 Enter 복귀·버튼 Enter 보존, Modal focus trap·backdrop/재생성 focus 유지·aria-live·focus-visible·forced-colors·reduced-motion·좁은 화면 재배치 적용
+- 2026-08-14 사용자 실제 브라우저 검수에서 1080×1080 다운로드 PNG·로그북 시각·클립보드 이미지/텍스트 붙여넣기·clear/fail 결과 입력·반응형 동작이 모두 정상임을 확인해 M8 수동 게이트 통과 및 커밋·푸시 승인
 
 ## 다음 할 일
 
-1. 사용자 승인에 따라 M7 커밋·푸시
-2. M8 — 결과 화면과 공유 이미지 구현 진입
+1. 승인된 M8 변경을 커밋·푸시해 원격 기준선을 확정
+2. M9 진입 시 전체 캠페인·결과·공유 플로우 통합 테스트 범위를 확정
+3. M9 저사양 옵션·번들/LCP 최적화·배포 게이트를 순서대로 진행 (M9 미착수)
 
 ## 검증 결과
 
@@ -116,67 +125,76 @@ M7 — HUD & UI 컴포넌트 (완료, 사용자 재수동검수 통과 및 커�
   - 같은 메뉴 화면을 재검증해 accessibility 100과 binary failure 0 유지 확인
   - 감사 범위는 메뉴 화면뿐이므로 인게임 HUD 실제 가시성의 증거로 사용하지 않음
 - M7 사용자 재수동 실플레이 게이트: 통과. 실제 플레이에서 stage·health·timer·minimap UI와 피격 오버레이 정상 표시 확인
+- M8 최신 Node.js 24 자동 검증: 통과
+  - ESLint: 0 errors / 0 warnings
+  - TypeScript 및 import boundary: 통과
+  - Vitest: 33 files / 496 tests 통과; ResultScreen·결과 스냅샷·presentation parity·Canvas backend 재시도·clipboard activation/download 폴백·terminal shortcut 계약 포함
+  - V8 coverage: statements 98.58%, branches 96.94%, functions 98.12%, lines 98.55%
+  - Vite production build: 118 modules, 초기 index 194.62 kB(63.63 kB gzip), lazy SceneCanvas 891.35 kB(242.63 kB gzip); 기존 500 kB 초과 warning만 유지
+- M8 사용자 실제 브라우저 수동 게이트(2026-08-14): 통과. 다운로드 PNG 1080×1080·로그북 시각·클립보드 이미지/텍스트 붙여넣기·clear/fail terminal 입력·반응형 동작 정상 확인
 
 ## 현재 제약
 
 - 500 kB 초과 lazy SceneCanvas 경고는 M4 기준선에서 이어 기록하고 M9 LCP/번들 최적화 게이트에서 재검토
 
-- M7 HUD 가시성 회귀 수정·자동검증·사용자 재수동 게이트 완료. 커밋·푸시 승인 획득
+- M8 수동 게이트까지 완료했으며, M9은 아직 시작하지 않음
 
 ## 미결 질문
 
-- M7 미결 사항 없음. absolute full-surface HUD와 camera-forward Html anchor, 피격 오버레이의 실제 가시성 확인 완료
+- 현재 없음. M9 요구사항은 하네스의 통합·성능·배포 게이트를 기준으로 착수 시 재확인
 
 ## 결정 로그
 
-| 날짜       | 결정                                                                     | 이유                                                                                        |
-| ---------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| 2026-08-09 | 첫 구현 범위를 M1로 제한                                                 | 하네스가 phase 순서와 선행 DoD 통과를 필수로 규정                                           |
-| 2026-08-09 | React 18을 명시적으로 고정하고 Three.js/Zustand는 설치하지 않음          | 기술 백서 스택과 M1 주의사항 준수                                                           |
-| 2026-08-09 | UI의 store 직접 import를 lint로 금지                                     | HUD와 도메인의 단일 소스 정합성 및 순환 의존 방지                                           |
-| 2026-08-09 | 폰트 토큰은 typewriter → 한글 UI fallback 순서로 병합                    | 디자인 백서의 시대감과 기술 백서의 한글 가독성 요구를 함께 만족                             |
-| 2026-08-09 | Node 24.14.0을 검증 런타임으로 고정                                      | 전역 Node 25.2.0의 Windows 설치·빌드 프로세스 비결정 종료 회피                              |
-| 2026-08-09 | 사용자 콘솔 시각 검수 확인으로 M1 게이트 완료                            | M1 수동 브라우저 렌더·반응형 검증 완료                                                      |
-| 2026-08-09 | 착지 정지 임계값을 전체 3D 속도 ≤ 0.1 unit/s로 고정                      | 하네스의 “속도 ≈ 0”을 명시적이고 축 독립적인 불변식으로 변환                                |
-| 2026-08-09 | 충돌 접촉은 포함하고 모든 도메인 숫자 입력은 유한값만 허용               | 접촉 누락과 NaN/Infinity 전파를 방지해 결정론 유지                                          |
-| 2026-08-09 | Vitest 4.1.10과 V8 per-file 80% 게이트를 M2 검증에 고정                  | 하네스 명령에서도 테스트 누락이나 합산 커버리지 은폐를 방지                                 |
-| 2026-08-09 | 정수 HP 경계에서 1e-9 이하 부동소수점 노이즈를 정규화                    | 30/60/120fps 누적 데미지가 50·0 경계와 별점·실패 결과를 바꾸지 않도록 보장                  |
-| 2026-08-09 | Zustand 5.0.14 vanilla store와 얇은 React hook을 M3 경계로 채택          | React 밖에서도 결정론적으로 테스트하고 UI의 단일 selector 진입점을 유지                     |
-| 2026-08-09 | mothProgress schema v1에는 Progress와 Settings만 저장                    | player, timer, result, Date 같은 세션 데이터를 새로고침 뒤 안전하게 초기화                  |
-| 2026-08-09 | 스테이지 기록은 최단 시간과 최고 별점을 독립 병합하고 총 별은 파생       | 재도전 결과가 기존 최고 기록을 퇴행시키거나 합계를 오염시키지 않도록 보장                   |
-| 2026-08-09 | 부분 손상 레코드는 복구하되 미래 버전은 저장 직전에도 재확인하여 보호    | 사용 가능한 진행도는 살리고 다른 탭·새 버전의 데이터를 덮어쓰지 않음                        |
-| 2026-08-09 | cleared/failed 뒤에는 startStage 전까지 transient 상태를 불변으로 유지   | 늦게 도착한 프레임·충돌 콜백이 결과를 뒤집거나 실패 세션을 부활시키지 않음                  |
-| 2026-08-11 | 사용자 브라우저·콘솔 검수 확인으로 M3 게이트 완료                        | LocalStorage 저장·새로고침 복원·손상 데이터 fallback의 수동 DoD 충족                        |
-| 2026-08-11 | Three 0.170.0 / Fiber 8.18.0 / Drei 9.122.0을 정확히 고정                | React 18과 기술 백서 r170+/Fiber 8 요구를 충족하고 중복 Three를 방지                        |
-| 2026-08-11 | M4 씬은 하나의 lazy Canvas와 primitive·instancing만 사용                 | 초기 HTML LCP를 지키면서 glTF 없이 회랑 밀도와 데스크톱 성능을 확보                         |
-| 2026-08-11 | Drei PerformanceMonitor를 숫자 DPR 상태 1.0–1.5에 직접 연결              | AdaptiveDpr 단독 사용의 무효 경로와 리사이즈 시 DPR 되돌림을 방지                           |
-| 2026-08-11 | 핵심 Canvas 경계는 SSR 계약 테스트, 실제 WebGL·FPS는 브라우저로 분리     | 단위 테스트 수치를 과장하지 않고 플랫폼 경계를 실제 환경에서 검증                           |
-| 2026-08-11 | 사용자 브라우저 검수로 M4 게이트 완료                                    | 3D 표시·콘솔·50–60fps·리사이즈 DoD를 실제 환경에서 충족                                     |
-| 2026-08-11 | readout과 설명문 폭을 29rem으로 확장                                     | 마지막 글자 고립 줄바꿈을 제거하면서 모바일 숨김과 상태 패널 구도를 유지                    |
-| 2026-08-11 | Space는 로컬 hover ↔ landing-ready edge 토글로 고정                      | M5 준비 자세·제어 하강을 M6 terminal isLanded·성공 판정과 분리                              |
-| 2026-08-11 | 프레임 물리는 로컬 ref와 1/120초 fixed-step으로 유지                     | React/store 60fps 갱신 없이 delta 독립 관성·카메라와 유한값 불변식 보장                     |
-| 2026-08-11 | 회랑 interior AABB를 나방 half-extents만큼 inset                         | 보이는 바닥·벽과 collider 중심 한계를 단일 설정에서 일치                                    |
-| 2026-08-11 | M5 store stage 생명주기는 시작하지 않음                                  | M6의 stage·target·terminal landing 범위를 선점하지 않고 샌드박스 물리만 검증                |
-| 2026-08-11 | 사용자 브라우저 검수로 M5 게이트 완료                                    | 입력·관성·카메라·모드·충돌·유한 로그·성능·리사이즈 DoD를 실제 환경에서 충족                 |
-| 2026-08-11 | 최초 3개 프로토타입을 고정 정의하고 store가 canonical spawn을 직접 사용  | 화면·물리·전환이 서로 다른 stage ID나 임의 spawn을 가질 수 없게 단일화                      |
-| 2026-08-11 | 전선 15·스파크 25를 렌더 FPS가 아닌 canonical 60Hz 접촉 tick으로 해석    | 백서의 접촉 프레임당 피해를 지키면서 30/60/120fps 난이도 차이를 제거                        |
-| 2026-08-11 | 과열 범위는 core 20 → range 8 HP/s 선형 감쇠, 진공관은 run당 1회 40      | 거리 경계가 명확하고 NaN·특이점 없이 결정론적으로 재현되도록 고정                           |
-| 2026-08-11 | start마다 stageRunId를 증가시키고 PlayerFlightRig를 keyed remount        | 같은 stage 재시도도 물리·입력·타이머·접촉 tick·one-shot을 모두 초기화                       |
-| 2026-08-11 | store의 post-damage HP로 실패를 착지보다 먼저 확정                       | React render 지연과 무관하게 치명 피해가 clear·progress 저장보다 우선                       |
-| 2026-08-11 | M6는 store 직결 semantic meter와 숫자 readout만 제공                     | health 동기화 DoD를 검수하되 정식 HealthBar·DamageOverlay는 M7에 유지                       |
-| 2026-08-12 | 초기 idle을 타이틀·소개·START 게이트로 유지                              | 신규 사용자가 게임 맥락과 조작을 이해한 뒤 난이도와 개별 단계를 선택                        |
-| 2026-08-12 | 마우스 입력에 낮은 축별 감도·event cap·각속도 cap·fixed smoothing 적용   | OS·DPI·polling rate 차이에서도 순간 화면 반전 없이 조작 가능성 유지                         |
-| 2026-08-12 | 패드 내부 고속 접촉은 failure 대신 settling 후 성공/이탈을 판정          | 첫 접촉의 미세 수평 관성이 정확한 착지를 즉시 실패로 고정하지 않도록 보정                   |
-| 2026-08-12 | M6 캠페인을 튜토리얼 1 + EASY/NORMAL/HARD 각 6의 19단계로 확장           | 3단계·단일 회랑으로는 난이도 상승과 경로 판단 요구를 충족하지 못함                          |
-| 2026-08-12 | 목표 면 swept contact를 충돌·bounce 전에 검사하고 terminal을 latch       | 성공 접촉 뒤 관성으로 튕겨 바닥 실패가 성공 결과를 뒤집는 회귀를 차단                       |
-| 2026-08-12 | 난이도별 relay-bay/switching-gallery/logic-labyrinth 회랑을 분리         | NORMAL·HARD가 EASY와 다른 공간 구성과 고도·방향 경로 판단을 요구하도록 보장                 |
-| 2026-08-12 | 수동 브라우저 게이트 전 M6 커밋·푸시 보류                                | 자동 검증만으로 모델·경로·다중 표면 착지의 실제 플레이 품질을 확정하지 않음                 |
-| 2026-08-12 | 메인에서 난이도 카드 뒤 개별 단계 카드를 선택하고 진행도로 난이도를 해금 | 전역 강제 순차 진행 없이 원하는 열린 단계를 고르면서 캠페인 성취를 보존                     |
-| 2026-08-12 | 선택 난이도를 실행 중 보존하고 clear/fail 뒤 Enter로 그 단계 목록 복귀   | 결과 뒤 다음 전역 번호를 자동 시작하지 않고 같은 난이도에서 선택권을 유지                   |
-| 2026-08-12 | NORMAL/HARD에 그림자 없는 은은한 분산 보조 조명을 배치                   | 어두운 분위기와 기존 성능 예산을 유지하면서 완전 암부의 플레이 불가를 방지                  |
-| 2026-08-13 | 사용자 최종 브라우저 검수로 M6 게이트 완료                               | 자체 호스팅 폰트·단계 카드 정보 위계·난이도별 메뉴 회랑을 포함한 최종 UI와 플레이 흐름 확인 |
-| 2026-08-13 | M7 HUD를 Drei `<Html fullscreen>` 계층에 배치                            | 3D Canvas와 같은 수명주기에서 정보를 동기화하면서 비대화형 영역은 비행 입력을 차단하지 않음 |
-| 2026-08-13 | P·Escape·비가시화·획득 후 pointer lock 상실을 `paused` 상태로 통합       | 물리·타이머·피해를 함께 정지하고 Continue 때 명시적으로 포인터 잠금과 플레이를 복원         |
-| 2026-08-13 | 메뉴 Lighthouse와 인게임 HUD 가시성 검증을 분리                          | 메뉴 DOM 감사만으로 실제 WebGL 위 HUD 표시를 확정하지 않음                                  |
-| 2026-08-13 | Lighthouse 13.4.1 메뉴 접근성 감사를 완료                                | 중복 `aria-label` 제거·재검증 후 accessibility 100, binary failure 0을 확인                 |
-| 2026-08-14 | HUD 회귀 수정 재검수 통과로 M7 완료 및 커밋·푸시 승인                    | 실제 플레이에서 stage·health·timer·minimap UI와 피격 오버레이 정상 표시 확인                |
+| 날짜       | 결정                                                                      | 이유                                                                                        |
+| ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 2026-08-09 | 첫 구현 범위를 M1로 제한                                                  | 하네스가 phase 순서와 선행 DoD 통과를 필수로 규정                                           |
+| 2026-08-09 | React 18을 명시적으로 고정하고 Three.js/Zustand는 설치하지 않음           | 기술 백서 스택과 M1 주의사항 준수                                                           |
+| 2026-08-09 | UI의 store 직접 import를 lint로 금지                                      | HUD와 도메인의 단일 소스 정합성 및 순환 의존 방지                                           |
+| 2026-08-09 | 폰트 토큰은 typewriter → 한글 UI fallback 순서로 병합                     | 디자인 백서의 시대감과 기술 백서의 한글 가독성 요구를 함께 만족                             |
+| 2026-08-09 | Node 24.14.0을 검증 런타임으로 고정                                       | 전역 Node 25.2.0의 Windows 설치·빌드 프로세스 비결정 종료 회피                              |
+| 2026-08-09 | 사용자 콘솔 시각 검수 확인으로 M1 게이트 완료                             | M1 수동 브라우저 렌더·반응형 검증 완료                                                      |
+| 2026-08-09 | 착지 정지 임계값을 전체 3D 속도 ≤ 0.1 unit/s로 고정                       | 하네스의 “속도 ≈ 0”을 명시적이고 축 독립적인 불변식으로 변환                                |
+| 2026-08-09 | 충돌 접촉은 포함하고 모든 도메인 숫자 입력은 유한값만 허용                | 접촉 누락과 NaN/Infinity 전파를 방지해 결정론 유지                                          |
+| 2026-08-09 | Vitest 4.1.10과 V8 per-file 80% 게이트를 M2 검증에 고정                   | 하네스 명령에서도 테스트 누락이나 합산 커버리지 은폐를 방지                                 |
+| 2026-08-09 | 정수 HP 경계에서 1e-9 이하 부동소수점 노이즈를 정규화                     | 30/60/120fps 누적 데미지가 50·0 경계와 별점·실패 결과를 바꾸지 않도록 보장                  |
+| 2026-08-09 | Zustand 5.0.14 vanilla store와 얇은 React hook을 M3 경계로 채택           | React 밖에서도 결정론적으로 테스트하고 UI의 단일 selector 진입점을 유지                     |
+| 2026-08-09 | mothProgress schema v1에는 Progress와 Settings만 저장                     | player, timer, result, Date 같은 세션 데이터를 새로고침 뒤 안전하게 초기화                  |
+| 2026-08-09 | 스테이지 기록은 최단 시간과 최고 별점을 독립 병합하고 총 별은 파생        | 재도전 결과가 기존 최고 기록을 퇴행시키거나 합계를 오염시키지 않도록 보장                   |
+| 2026-08-09 | 부분 손상 레코드는 복구하되 미래 버전은 저장 직전에도 재확인하여 보호     | 사용 가능한 진행도는 살리고 다른 탭·새 버전의 데이터를 덮어쓰지 않음                        |
+| 2026-08-09 | cleared/failed 뒤에는 startStage 전까지 transient 상태를 불변으로 유지    | 늦게 도착한 프레임·충돌 콜백이 결과를 뒤집거나 실패 세션을 부활시키지 않음                  |
+| 2026-08-11 | 사용자 브라우저·콘솔 검수 확인으로 M3 게이트 완료                         | LocalStorage 저장·새로고침 복원·손상 데이터 fallback의 수동 DoD 충족                        |
+| 2026-08-11 | Three 0.170.0 / Fiber 8.18.0 / Drei 9.122.0을 정확히 고정                 | React 18과 기술 백서 r170+/Fiber 8 요구를 충족하고 중복 Three를 방지                        |
+| 2026-08-11 | M4 씬은 하나의 lazy Canvas와 primitive·instancing만 사용                  | 초기 HTML LCP를 지키면서 glTF 없이 회랑 밀도와 데스크톱 성능을 확보                         |
+| 2026-08-11 | Drei PerformanceMonitor를 숫자 DPR 상태 1.0–1.5에 직접 연결               | AdaptiveDpr 단독 사용의 무효 경로와 리사이즈 시 DPR 되돌림을 방지                           |
+| 2026-08-11 | 핵심 Canvas 경계는 SSR 계약 테스트, 실제 WebGL·FPS는 브라우저로 분리      | 단위 테스트 수치를 과장하지 않고 플랫폼 경계를 실제 환경에서 검증                           |
+| 2026-08-11 | 사용자 브라우저 검수로 M4 게이트 완료                                     | 3D 표시·콘솔·50–60fps·리사이즈 DoD를 실제 환경에서 충족                                     |
+| 2026-08-11 | readout과 설명문 폭을 29rem으로 확장                                      | 마지막 글자 고립 줄바꿈을 제거하면서 모바일 숨김과 상태 패널 구도를 유지                    |
+| 2026-08-11 | Space는 로컬 hover ↔ landing-ready edge 토글로 고정                       | M5 준비 자세·제어 하강을 M6 terminal isLanded·성공 판정과 분리                              |
+| 2026-08-11 | 프레임 물리는 로컬 ref와 1/120초 fixed-step으로 유지                      | React/store 60fps 갱신 없이 delta 독립 관성·카메라와 유한값 불변식 보장                     |
+| 2026-08-11 | 회랑 interior AABB를 나방 half-extents만큼 inset                          | 보이는 바닥·벽과 collider 중심 한계를 단일 설정에서 일치                                    |
+| 2026-08-11 | M5 store stage 생명주기는 시작하지 않음                                   | M6의 stage·target·terminal landing 범위를 선점하지 않고 샌드박스 물리만 검증                |
+| 2026-08-11 | 사용자 브라우저 검수로 M5 게이트 완료                                     | 입력·관성·카메라·모드·충돌·유한 로그·성능·리사이즈 DoD를 실제 환경에서 충족                 |
+| 2026-08-11 | 최초 3개 프로토타입을 고정 정의하고 store가 canonical spawn을 직접 사용   | 화면·물리·전환이 서로 다른 stage ID나 임의 spawn을 가질 수 없게 단일화                      |
+| 2026-08-11 | 전선 15·스파크 25를 렌더 FPS가 아닌 canonical 60Hz 접촉 tick으로 해석     | 백서의 접촉 프레임당 피해를 지키면서 30/60/120fps 난이도 차이를 제거                        |
+| 2026-08-11 | 과열 범위는 core 20 → range 8 HP/s 선형 감쇠, 진공관은 run당 1회 40       | 거리 경계가 명확하고 NaN·특이점 없이 결정론적으로 재현되도록 고정                           |
+| 2026-08-11 | start마다 stageRunId를 증가시키고 PlayerFlightRig를 keyed remount         | 같은 stage 재시도도 물리·입력·타이머·접촉 tick·one-shot을 모두 초기화                       |
+| 2026-08-11 | store의 post-damage HP로 실패를 착지보다 먼저 확정                        | React render 지연과 무관하게 치명 피해가 clear·progress 저장보다 우선                       |
+| 2026-08-11 | M6는 store 직결 semantic meter와 숫자 readout만 제공                      | health 동기화 DoD를 검수하되 정식 HealthBar·DamageOverlay는 M7에 유지                       |
+| 2026-08-12 | 초기 idle을 타이틀·소개·START 게이트로 유지                               | 신규 사용자가 게임 맥락과 조작을 이해한 뒤 난이도와 개별 단계를 선택                        |
+| 2026-08-12 | 마우스 입력에 낮은 축별 감도·event cap·각속도 cap·fixed smoothing 적용    | OS·DPI·polling rate 차이에서도 순간 화면 반전 없이 조작 가능성 유지                         |
+| 2026-08-12 | 패드 내부 고속 접촉은 failure 대신 settling 후 성공/이탈을 판정           | 첫 접촉의 미세 수평 관성이 정확한 착지를 즉시 실패로 고정하지 않도록 보정                   |
+| 2026-08-12 | M6 캠페인을 튜토리얼 1 + EASY/NORMAL/HARD 각 6의 19단계로 확장            | 3단계·단일 회랑으로는 난이도 상승과 경로 판단 요구를 충족하지 못함                          |
+| 2026-08-12 | 목표 면 swept contact를 충돌·bounce 전에 검사하고 terminal을 latch        | 성공 접촉 뒤 관성으로 튕겨 바닥 실패가 성공 결과를 뒤집는 회귀를 차단                       |
+| 2026-08-12 | 난이도별 relay-bay/switching-gallery/logic-labyrinth 회랑을 분리          | NORMAL·HARD가 EASY와 다른 공간 구성과 고도·방향 경로 판단을 요구하도록 보장                 |
+| 2026-08-12 | 수동 브라우저 게이트 전 M6 커밋·푸시 보류                                 | 자동 검증만으로 모델·경로·다중 표면 착지의 실제 플레이 품질을 확정하지 않음                 |
+| 2026-08-12 | 메인에서 난이도 카드 뒤 개별 단계 카드를 선택하고 진행도로 난이도를 해금  | 전역 강제 순차 진행 없이 원하는 열린 단계를 고르면서 캠페인 성취를 보존                     |
+| 2026-08-12 | 선택 난이도를 실행 중 보존하고 clear/fail 뒤 Enter로 그 단계 목록 복귀    | 결과 뒤 다음 전역 번호를 자동 시작하지 않고 같은 난이도에서 선택권을 유지                   |
+| 2026-08-12 | NORMAL/HARD에 그림자 없는 은은한 분산 보조 조명을 배치                    | 어두운 분위기와 기존 성능 예산을 유지하면서 완전 암부의 플레이 불가를 방지                  |
+| 2026-08-13 | 사용자 최종 브라우저 검수로 M6 게이트 완료                                | 자체 호스팅 폰트·단계 카드 정보 위계·난이도별 메뉴 회랑을 포함한 최종 UI와 플레이 흐름 확인 |
+| 2026-08-13 | M7 HUD를 Drei `<Html fullscreen>` 계층에 배치                             | 3D Canvas와 같은 수명주기에서 정보를 동기화하면서 비대화형 영역은 비행 입력을 차단하지 않음 |
+| 2026-08-13 | P·Escape·비가시화·획득 후 pointer lock 상실을 `paused` 상태로 통합        | 물리·타이머·피해를 함께 정지하고 Continue 때 명시적으로 포인터 잠금과 플레이를 복원         |
+| 2026-08-13 | 메뉴 Lighthouse와 인게임 HUD 가시성 검증을 분리                           | 메뉴 DOM 감사만으로 실제 WebGL 위 HUD 표시를 확정하지 않음                                  |
+| 2026-08-13 | Lighthouse 13.4.1 메뉴 접근성 감사를 완료                                 | 중복 `aria-label` 제거·재검증 후 accessibility 100, binary failure 0을 확인                 |
+| 2026-08-14 | HUD 회귀 수정 재검수 통과로 M7 완료 및 커밋·푸시 승인                     | 실제 플레이에서 stage·health·timer·minimap UI와 피격 오버레이 정상 표시 확인                |
+| 2026-08-14 | 결과 스냅샷에서 불변 `ResultPresentation`을 파생해 화면·텍스트·PNG에 공유 | terminal 이후 값 변화나 서로 다른 포매팅으로 결과 표시가 어긋나는 회귀를 방지               |
+| 2026-08-14 | M8 실제 브라우저 공유 기능 검수 통과 및 완료·커밋·푸시 승인               | 다운로드 해상도·로그북 시각·clipboard paste·terminal 입력·반응형 동작이 모두 정상임을 확인  |

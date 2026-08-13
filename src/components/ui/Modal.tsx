@@ -15,8 +15,11 @@ const FOCUSABLE_SELECTOR = [
 export interface ModalProps {
   readonly children: ReactNode;
   readonly description?: ReactNode;
+  readonly dismissible?: boolean;
   readonly initialFocusRef?: RefObject<HTMLElement>;
   readonly onClose: () => void;
+  readonly plateCode?: ReactNode;
+  readonly size?: 'md' | 'lg';
   readonly title: ReactNode;
 }
 
@@ -27,7 +30,16 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
   );
 }
 
-export function Modal({ children, description, initialFocusRef, onClose, title }: ModalProps) {
+export function Modal({
+  children,
+  description,
+  dismissible = true,
+  initialFocusRef,
+  onClose,
+  plateCode = 'MARK II · CONTROL INTERRUPT',
+  size = 'md',
+  title,
+}: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -44,7 +56,7 @@ export function Modal({ children, description, initialFocusRef, onClose, title }
   }, [initialFocusRef]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' && dismissible) {
       event.preventDefault();
       event.stopPropagation();
       onClose();
@@ -77,8 +89,12 @@ export function Modal({ children, description, initialFocusRef, onClose, title }
   };
 
   const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (event.currentTarget === event.target) {
+    if (event.currentTarget !== event.target) return;
+
+    if (dismissible) {
       onClose();
+    } else {
+      event.preventDefault();
     }
   };
 
@@ -86,7 +102,7 @@ export function Modal({ children, description, initialFocusRef, onClose, title }
     <div className={styles.backdrop} onMouseDown={handleBackdropClick}>
       <div
         ref={panelRef}
-        className={styles.panel}
+        className={[styles.panel, styles[size]].join(' ')}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -95,10 +111,14 @@ export function Modal({ children, description, initialFocusRef, onClose, title }
         onKeyDown={handleKeyDown}
       >
         <span className={styles.plateCode} aria-hidden="true">
-          MARK II · CONTROL INTERRUPT
+          {plateCode}
         </span>
         <h2 id={titleId}>{title}</h2>
-        {description === undefined ? null : <div id={descriptionId}>{description}</div>}
+        {description === undefined ? null : (
+          <div id={descriptionId} className={styles.description}>
+            {description}
+          </div>
+        )}
         <div className={styles.content}>{children}</div>
       </div>
     </div>

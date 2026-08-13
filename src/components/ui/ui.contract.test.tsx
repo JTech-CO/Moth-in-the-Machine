@@ -49,6 +49,24 @@ describe('M7 shared UI SSR contracts', () => {
     expect(markup).toContain('CONTINUE FLIGHT');
   });
 
+  it('renders a non-dismissible result dialog without a close affordance', () => {
+    const markup = renderToStaticMarkup(
+      <Modal
+        title="STAGE CLEARED"
+        dismissible={false}
+        plateCode="FINAL RECORD"
+        size="lg"
+        onClose={vi.fn()}
+      >
+        <Button>RETURN TO STAGES · ENTER</Button>
+      </Modal>,
+    );
+
+    expect(markup).toContain('role="dialog"');
+    expect(markup).toContain('FINAL RECORD');
+    expect(markup).toContain('RETURN TO STAGES · ENTER');
+  });
+
   it('exposes numeric health plus a non-colour status and ten instrument segments', () => {
     const markup = renderToStaticMarkup(<HealthBar health={24.2} damageRevision={3} />);
 

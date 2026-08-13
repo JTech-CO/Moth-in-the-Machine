@@ -2,7 +2,7 @@
 
 **버전**: 1.2\
 **작성일**: 2026년 7월 31일  
-**개정일**: 2026년 8월 13일\
+**개정일**: 2026년 8월 14일\
 **작성자**: 디자인팀  
 **참고 문서**: 기획서 v1.0, 기술 백서 v1.0, 1947년 Mark II 시대 디자인 요소 정리
 
@@ -35,7 +35,7 @@
 ### 2.2. 사용자 상호작용 (Interaction Logic)
 - **주요 액션 (Actions)**:
   - **Hover Effects**: 금속 패널 위 버튼/스위치에 미세한 반사 증가 + 베이클라이트 광택 강화
-  - **Navigation**: 타이틀/메인 → 난이도 선택 → 해당 난이도의 개별 단계 선택 → 인게임 → 중앙 결과 안내 → 선택한 난이도의 개별 단계 선택 복귀의 계층 흐름. clear/fail 진입 즉시 포인터 잠금을 해제하고 커서를 복원한다. 결과 상태의 Enter는 보존된 난이도의 단계 목록으로 돌아가며, R은 현재 단계를 재시작하고 다음 단계로 자동 이동하지 않는다. P·Escape, 문서 비가시화, 획득 후 포인터 잠금 상실은 중앙 일시정지 모달을 열고, Continue·Restart·Return 동작을 제공한다.
+  - **Navigation**: 타이틀/메인 → 난이도 선택 → 해당 난이도의 개별 단계 선택 → 인게임 → 정식 Portal 결과 모달 → 선택한 난이도의 개별 단계 선택 복귀의 계층 흐름. clear/fail 진입 즉시 포인터 잠금을 해제하고 커서를 복원한다. 결과 모달의 Enter는 보존된 난이도의 단계 목록으로 돌아가며, R은 현재 단계를 재시작하고 다음 단계로 자동 이동하지 않는다. 단축키는 버튼 등 대화형 요소의 입력을 침범하지 않는다. P·Escape, 문서 비가시화, 획득 후 포인터 잠금 상실은 중앙 일시정지 모달을 열고, Continue·Restart·Return 동작을 제공한다.
 - **입력 방식 (Input)**: Keyboard/Mouse 우선, 터치 시 가상 조이스틱 + 드래그 카메라. 카메라는 기본 3인칭이며 T로 1인칭·3인칭을 전환. 모든 버튼은 물리적 눌림 피드백 제공
 - **캠페인 구성 (Campaign)**: 조작 튜토리얼 1개 + EASY·NORMAL·HARD 각 6개, 총 19단계. 난이도를 선택한 뒤 그 안의 개별 단계를 플레이하며, 전역 1→19 강제 순차 진행은 사용하지 않는다. relay-bay는 튜토리얼·EASY, switching-gallery는 NORMAL, logic-labyrinth는 HARD의 고유 공간 언어로 사용
 - **메뉴 배경 회랑 (Menu Corridor)**: 실행 중인 stage가 있으면 그 stage의 environment를 최우선으로 유지한다. active run이 없을 때 선택값 null·TUTORIAL·EASY는 relay-bay, NORMAL은 switching-gallery, HARD는 logic-labyrinth를 배경으로 표시한다.
@@ -102,9 +102,9 @@
 - **StarDisplay**: 플레이 중에는 현재 HP로 예상 별점을 갱신하고 clear/fail 뒤에는 latch된 최종 별점을 표시. 금·은·동 색과 읽을 수 있는 레이블을 병행
 - **DamageOverlay**: health 감소에만 반응하는 가장자리 적색 pulse. 피해량에 따라 강도를 조절하고 동작 축소 환경에서는 pulse와 shake를 제거
 - **PauseModal**: Portal 기반 중앙 금속 패널. Continue·Restart·Return을 순서대로 배치하고 초기 focus, Tab/Shift+Tab 순환, 닫힌 뒤 이전 focus 복귀를 보장
-- **ResultCard / ShareImage**: 1947년 실제 로그북 페이지를 재현. 크림 종이 배경 + 타이프라이터 폰트 + 테이프에 붙은 나방 일러스트 + 별·시간·체력 정보
+- **ResultCard / ShareImage**: clear/fail 공용 Portal 모달에 1947년 실제 로그북 페이지를 재현한다. terminal 결과 스냅샷에서 만든 단일 불변 presentation으로 화면과 공유 결과의 별·시간·체력을 일치시킨다. 클리어 공유 이미지는 1080×1080 크림 종이 + Courier 계열 타이프라이터 폰트 + 테이프와 vector 나방 표본 + 별·시간·HP·해시태그로 구성한다.
 - **ControlPanelButton**: 베이클라이트 원형 버튼 + 금속 베벨. 클릭 시 눌림 애니메이션과 기계음 피드백
-- **TerminalNotice (M6)**: clear/fail 상태와 Enter 단계 목록 복귀·R 재시작을 뷰포트 중앙에 고대비로 안내. 정식 결과 모달·공유 기능은 M8 범위
+- **TerminalNotice (M6)**: clear/fail 상태와 Enter 단계 목록 복귀·R 재시작을 안내하던 임시 중앙 표면. M8에서 정식 `ResultScreen` Portal 모달로 대체
 - **Moth Model**: 앞·뒷날개, 더듬이, 다리와 몸통의 실루엣을 분명히 하여 파리와 혼동되지 않는 primitive 나방으로 표현
 - **Obstacle Model**: 전선·스파크·과열 릴레이·진공관의 기능과 충돌 범위를 색·형태·발광 구조로 구분하며, 회랑 구조와 분리되어 떠 보이지 않게 결합
 
@@ -112,6 +112,9 @@
 - **M7 자동 QA 기준선**: StageEnvironment.hud·HudVisibility·DamageOverlay 회귀 계약을 포함한 25개 테스트 파일·402개 테스트를 통과했다. V8 overall coverage는 statements 98.97%, branches 97.32%, functions 99.02%, lines 98.94%이며 build는 111 modules, index 169.55 kB(55.54 kB gzip), SceneCanvas 895.53 kB(244.14 kB gzip)이다.
 - **M7 Lighthouse QA**: 메뉴 화면 accessibility 100, binary failure 0은 메뉴 DOM에만 해당하며 인게임 HUD 실제 가시성의 증거가 아니다.
 - **M7 게이트 상태**: 2026-08-14 사용자 재수동 실플레이에서 stage·health·timer·minimap UI와 피격 오버레이가 정상 표시됨을 확인했다. 0×0 HUD 회귀 수정 뒤 시각 게이트를 통과해 M7을 완료하고 커밋·푸시를 승인했다. 메뉴 Lighthouse 결과는 인게임 가시성 증거와 분리해 유지한다.
+- **M8 공유 폴백**: OffscreenCanvas를 우선하고 생성·context·PNG 인코딩 실패 시 HTMLCanvasElement로 다시 렌더링하며 폰트 로딩 timeout을 둔다. 준비된 PNG 복사는 클릭 호출 스택에서 시작해 Safari activation을 보존하고, 자동 텍스트 폴백과 항상 보이는 `COPY RESULT TEXT`를 함께 둔다. 다운로드 URL은 클릭 뒤 지연 해제한다.
+- **M8 자동 QA**: Node.js 24 기준 33개 테스트 파일·496개 테스트를 통과했다. V8 overall coverage는 statements 98.58%, branches 96.94%, functions 98.12%, lines 98.55%이며 build는 118 modules, index 194.62 kB(63.63 kB gzip), SceneCanvas 891.35 kB(242.63 kB gzip)이다. 기존 500 kB 초과 warning만 유지한다.
+- **M8 게이트 상태**: 2026-08-14 사용자 실제 브라우저 검수에서 다운로드 PNG의 1080×1080 해상도·로그북 시각, clipboard 이미지/텍스트 붙여넣기, clear/fail 결과 입력과 반응형 동작이 모두 정상임을 확인했다. M8을 완료하고 커밋·푸시를 승인했으며 M9은 다음 작업으로 남겨 두고 아직 시작하지 않았다.
 
 ## 5. UI/UX 디자인 가이드 (Design System)
 
@@ -155,6 +158,7 @@ src/
     - 체력 바·타이머는 색상만으로 정보를 전달하지 않고 텍스트·아이콘 병행.
     - 고대비 모드에서도 호박색 강조가 유지되도록 대비 검증.
     - 비대화형 HUD는 Canvas 비행 입력을 통과시키고 버튼·모달만 pointer-events를 받는다. 일시정지 모달은 focus trap과 이전 focus 복귀를 제공한다.
+    - 결과 모달도 Portal dialog semantics, 초기 focus·focus trap·focus 복귀, aria-live 상태/오류, 키보드 focus-visible을 제공하며 좁은 화면에서 단일 열로 재배치한다.
     - `prefers-reduced-motion`에서는 피해 pulse·바 shake·버튼 transform을 제거하고, `forced-colors`에서도 경계·focus·상태가 구분되게 한다.
 3.  **예외 처리 (Exception Handling)**:
     - 3D 로딩 실패 시 로그북 스타일 Skeleton UI 노출.

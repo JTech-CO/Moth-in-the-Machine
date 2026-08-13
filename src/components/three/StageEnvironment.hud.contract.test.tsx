@@ -202,53 +202,25 @@ describe('M7 StageEnvironment HUD integration contract', () => {
     expect(() => captured.frameCallbacks[0]()).not.toThrow();
   });
 
-  it('forwards adaptive performance factors and removes the stage keyboard listener', () => {
+  it('forwards adaptive performance factors without claiming terminal shortcuts', () => {
     const onPerformanceFactorChange = vi.fn();
     renderStageEnvironment(onPerformanceFactorChange);
 
     captured.performanceMonitor?.onChange({ factor: 0.42 });
     expect(onPerformanceFactorChange).toHaveBeenCalledWith(0.42);
-    expect(captured.listeners.has('keydown')).toBe(true);
-
-    captured.cleanup?.();
     expect(captured.listeners.has('keydown')).toBe(false);
   });
 
-  it('returns to the stage menu only for a non-repeated Enter after a terminal run', () => {
-    const preventDefault = vi.fn();
+  it.each(['playing', 'paused', 'cleared', 'failed'] as const)(
+    'leaves keyboard ownership outside the Three scene while %s',
+    (status) => {
+      captured.state.currentStageId = 8;
+      captured.state.status = status;
 
-    captured.state.currentStageId = 8;
-    captured.state.status = 'cleared';
-    renderStageEnvironment();
-    const terminalListener = captured.listeners.get('keydown')!;
+      renderStageEnvironment();
 
-    terminalListener({ code: 'Enter', repeat: true, preventDefault } as unknown as KeyboardEvent);
-    terminalListener({ code: 'KeyT', repeat: false, preventDefault } as unknown as KeyboardEvent);
-    expect(captured.state.returnToMenu).not.toHaveBeenCalled();
-    expect(preventDefault).not.toHaveBeenCalled();
-
-    terminalListener({ code: 'Enter', repeat: false, preventDefault } as unknown as KeyboardEvent);
-    expect(preventDefault).toHaveBeenCalledOnce();
-    expect(captured.state.returnToMenu).toHaveBeenCalledOnce();
-  });
-
-  it.each([
-    ['playing', 8],
-    ['cleared', null],
-    ['failed', 20],
-  ] as const)('ignores Enter when status is %s and stage id is %s', (status, currentStageId) => {
-    const preventDefault = vi.fn();
-    captured.state.currentStageId = currentStageId;
-    captured.state.status = status;
-
-    renderStageEnvironment();
-    captured.listeners.get('keydown')!({
-      code: 'Enter',
-      repeat: false,
-      preventDefault,
-    } as unknown as KeyboardEvent);
-
-    expect(preventDefault).not.toHaveBeenCalled();
-    expect(captured.state.returnToMenu).not.toHaveBeenCalled();
-  });
+      expect(captured.listeners.has('keydown')).toBe(false);
+      expect(captured.state.returnToMenu).not.toHaveBeenCalled();
+    },
+  );
 });

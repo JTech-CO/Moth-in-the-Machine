@@ -456,69 +456,6 @@
 .stageAction > [aria-hidden='true'] {
   font-size: 1.05rem;
 }
-.resultPrompt {
-  position: absolute;
-  z-index: 3;
-  bottom: clamp(3.8rem, 8vh, 5.2rem);
-  left: 50%;
-  width: min(25rem, calc(100vw - 2rem));
-  border: 1px solid rgba(240, 193, 75, 0.58);
-  padding: 0.9rem 1.1rem;
-  pointer-events: none;
-  color: var(--text-cream);
-  text-align: center;
-  background: rgba(10, 14, 23, 0.9);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.52);
-  transform: translateX(-50%);
-  backdrop-filter: blur(6px);
-}
-
-.resultPrompt > span,
-.resultPrompt > strong,
-.resultPrompt > small {
-  display: block;
-  font-family: var(--font-typewriter);
-  letter-spacing: 0.13em;
-}
-
-.resultPrompt > span {
-  color: var(--accent-amber);
-  font-size: 0.58rem;
-}
-
-.resultPrompt > strong {
-  margin-top: 0.35rem;
-  color: var(--text-cream);
-  font-size: clamp(1.5rem, 4vw, 2.35rem);
-  line-height: 1;
-}
-
-.resultPrompt > p {
-  margin: 0.4rem 0 0;
-  color: rgba(232, 228, 217, 0.88);
-  font-size: 0.82rem;
-}
-
-.resultPrompt > small {
-  margin-top: 0.45rem;
-  color: var(--text-muted);
-  font-size: 0.52rem;
-}
-
-.failedPrompt {
-  border-color: rgba(216, 111, 88, 0.64);
-}
-
-.failedPrompt > span {
-  color: #d86f58;
-}
-
-.clearedPrompt {
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.52),
-    0 0 28px rgba(240, 193, 75, 0.12);
-}
-
 .footer {
   position: absolute;
   z-index: 2;

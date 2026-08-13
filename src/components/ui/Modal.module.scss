@@ -8,6 +8,7 @@
   padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
     max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   pointer-events: auto;
+  cursor: default;
   background: rgba(4, 6, 10, 0.78);
   backdrop-filter: blur(6px);
 }
@@ -26,6 +27,14 @@
   box-shadow:
     0 24px 80px rgba(0, 0, 0, 0.72),
     inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.md {
+  width: min(100%, 29rem);
+}
+
+.lg {
+  width: min(100%, 68rem);
 }
 
 .panel:focus {
@@ -55,7 +64,7 @@
   letter-spacing: -0.035em;
 }
 
-.panel [id]:not(h2) {
+.description {
   margin-top: 0.7rem;
   color: rgba(232, 228, 217, 0.78);
   font-size: 0.88rem;
@@ -72,7 +81,9 @@
     padding: 0.65rem;
   }
 
-  .panel {
+  .panel,
+  .md,
+  .lg {
     width: 100%;
     max-height: calc(100dvh - 1.3rem);
     padding: 1.15rem;

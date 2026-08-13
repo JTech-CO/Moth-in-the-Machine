@@ -112,7 +112,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
   5. Modal이 Portal·dialog semantics·초기 focus·Tab/Shift+Tab focus trap·focus 복귀를 제공하고, 비대화형 HUD는 Canvas 입력을 차단하지 않는다.
   6. 320px·768px·desktop에서 가로 스크롤 없음, 키보드 focus-visible, `showControlHints`, `prefers-reduced-motion`, `forced-colors` 계약을 통과한다.
   7. GameHud root와 DamageOverlay는 Drei Html의 transformed outer wrapper가 만든 0×0 containing block에 의존하지 않고 `position: absolute` full surface를 유지하며, Html anchor는 camera-forward 위치에서 behind-camera 숨김을 방지한다.
-  8. M6 clear/fail 중앙 결과 안내와 Enter 단계 목록 복귀·R 재시작은 M8 전까지 유지된다.
+  8. M6 clear/fail 중앙 결과 안내와 Enter 단계 목록 복귀·R 재시작은 M8 전까지 유지된다. M8에서 정식 `ResultScreen`으로 교체한다.
 - 검증: 단위/계약 테스트 + 브라우저에서 체력·데미지·타이머·미니맵·별점·일시정지/재개를 수동 시연 + 320/768/desktop 리사이즈·포인터 잠금·focus 순서 확인 + Lighthouse 접근성 점수 확인 + 디자인 백서 색상 대조.
 - 주의: 3D 위 Html 오버레이는 drei의 `<Html>` 사용. 자동검증·메뉴 Lighthouse와 별도로 수동 브라우저 실플레이에서 인게임 HUD 가시성을 확인해야 완료 처리한다.
 - 회귀 수정(2026-08-13): 사용자 실플레이에서 transformed 0×0 Html wrapper 아래 fixed HUD가 붕괴·clip되는 문제를 확인해 absolute full surface와 camera-forward anchor로 수정했다.
@@ -132,6 +132,13 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
   3. 클립보드 복사와 파일 다운로드가 모두 성공.
 - 검증: 실제 클리어 후 이미지 생성 → 다운로드 파일 크기·해상도 확인 + 시각적 검수.
 - 주의: OffscreenCanvas 가능 시 사용, 아니면 메인 스레드에서 빠르게 생성 후 revokeObjectURL.
+- 구현 결과(2026-08-14): clear/fail 공용 Portal `ResultScreen`, HP 0 실패를 포함한 terminal 결과 스냅샷, 화면·텍스트·PNG가 공유하는 불변 presentation을 연결했다. R은 전역 재시작, Enter는 비대화형 영역에서 단계 복귀로 처리하고 버튼 focus의 Enter는 해당 액션을 실행한다.
+- 공유 결과(2026-08-14): 1080×1080 크림 로그북 Canvas에 Courier 계열 글자, 테이프와 vector 나방 표본, 별·시간·HP·해시태그를 그린다. OffscreenCanvas render/encode 실패 시 HTMLCanvasElement 재시도, 폰트 timeout, 클릭 스택 내 `ClipboardItem` PNG 쓰기, 자동·명시적 텍스트 복사, 다운로드 뒤 지연 revoke 폴백을 적용했다.
+- 접근성·반응형(2026-08-14): Portal dialog semantics·단계 복귀 초기 focus·focus trap·focus 복귀, 비해제형 backdrop·재생성 focus 보존, aria-live 피드백, focus-visible·forced-colors·reduced-motion, 좁은 화면 재배치 계약을 반영했다.
+- 자동검증 결과(2026-08-14): Node.js 24에서 lint·TypeScript·import boundary, Vitest 33 files / 496 tests 통과. V8 overall coverage statements 98.58% / branches 96.94% / functions 98.12% / lines 98.55%.
+- production build 결과: Vite 118 modules, 초기 index 194.62 kB(63.63 kB gzip), lazy SceneCanvas 891.35 kB(242.63 kB gzip). 기존 500 kB 초과 warning만 유지.
+- 수동검증 결과(2026-08-14): 사용자 실제 브라우저에서 다운로드 PNG 1080×1080 해상도·크림 로그북 시각, clipboard 이미지/텍스트 붙여넣기, clear/fail terminal 입력과 반응형 동작이 모두 정상임을 확인했다.
+- 현재 진행 메모(2026-08-14): M8 DoD 완료 및 커밋·푸시 승인. 다음 작업은 M9 통합·폴리시·배포이며 아직 시작하지 않았다.
 
 ### M9 — 통합·폴리시·배포
 - 진입조건: M8 게이트 통과.

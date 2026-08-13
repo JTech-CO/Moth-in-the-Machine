@@ -244,6 +244,10 @@ export function createGameStore(dependencies: GameStoreDependencies = {}): GameS
 
       const health = applyHealthDelta(state.player.health, delta);
       const failed = isHealthDepleted(health);
+      const result =
+        failed && state.currentStageId !== null
+          ? createResult(state.currentStageId, state.elapsedTimeMs, health, 0, now)
+          : state.result;
 
       set({
         player: {
@@ -253,7 +257,7 @@ export function createGameStore(dependencies: GameStoreDependencies = {}): GameS
         },
         status: failed ? 'failed' : state.status,
         stars: failed ? 0 : state.stars,
-        result: failed ? null : state.result,
+        result,
       });
 
       return health;

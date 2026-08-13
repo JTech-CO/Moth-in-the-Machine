@@ -54,7 +54,16 @@ const captured = vi.hoisted(() => ({
       completedStages: [] as { stageId: number; bestTimeMs: number; bestStars: number }[],
       totalStars: 0,
     },
+    currentStageId: null as number | null,
+    result: null as null | {
+      stageId: number;
+      timeMs: number;
+      remainingHealth: number;
+      stars: number;
+      timestamp: Date;
+    },
     startStage: () => undefined,
+    returnToMenu: () => undefined,
   },
 }));
 
@@ -130,23 +139,44 @@ describe('M7 scene canvas contract', () => {
     }
   });
   it.each([
-    ['cleared', 'STAGE CLEARED', '다음 단계 선택 화면으로 이동'],
-    ['failed', 'FLIGHT FAILED', '메인 · 단계 선택 화면으로 복귀'],
-  ] as const)('shows an explicit Enter prompt after a %s run', (status, heading, action) => {
+    ['cleared', 'STAGE CLEARED', true],
+    ['failed', 'FLIGHT FAILED', false],
+  ] as const)('renders the full M8 result dialog after a %s run', (status, heading, shareable) => {
     const originalStatus = captured.gameState.status;
+    const originalStageId = captured.gameState.currentStageId;
+    const originalResult = captured.gameState.result;
 
     captured.gameState.status = status;
+    captured.gameState.currentStageId = 2;
+    captured.gameState.result = {
+      stageId: 2,
+      timeMs: 12_300,
+      remainingHealth: shareable ? 100 : 0,
+      stars: shareable ? 3 : 0,
+      timestamp: new Date('2026-08-14T00:00:00.000Z'),
+    };
 
     try {
       const markup = renderToString(createElement(App));
 
-      expect(markup).toContain('role="status"');
+      expect(markup).toContain('role="dialog"');
       expect(markup).toContain(heading);
-      expect(markup).toContain('ENTER');
-      expect(markup).toContain(action);
-      expect(markup).toContain('R · 현재 단계 다시 시작');
+      expect(markup).toContain('RETURN TO STAGES · ENTER');
+      expect(markup).toContain('RETRY STAGE · R');
+
+      if (shareable) {
+        expect(markup).toContain('COPY IMAGE');
+        expect(markup).toContain('DOWNLOAD PNG');
+        expect(markup).not.toContain('CONTACT NOT RECORDED');
+      } else {
+        expect(markup).toContain('CONTACT NOT RECORDED');
+        expect(markup).not.toContain('COPY IMAGE');
+        expect(markup).not.toContain('DOWNLOAD PNG');
+      }
     } finally {
       captured.gameState.status = originalStatus;
+      captured.gameState.currentStageId = originalStageId;
+      captured.gameState.result = originalResult;
     }
   });
 

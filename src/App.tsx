@@ -9,6 +9,7 @@ import {
 } from 'react';
 
 import styles from '@/App.module.scss';
+import { ResultScreen } from '@/components/layout/ResultScreen';
 import type { SceneAvailability } from '@/components/three/SceneCanvas';
 import { useGameStore } from '@/hooks/useGameStore';
 import {
@@ -18,7 +19,7 @@ import {
   normalizeCompletedStageIds,
   type CampaignDifficulty,
 } from '@/utils/campaignProgression';
-import { getStageDefinition, TOTAL_STAGE_COUNT } from '@/utils/stages';
+import { getStageDefinition, isStageId, TOTAL_STAGE_COUNT } from '@/utils/stages';
 
 const SceneCanvas = lazy(() => import('@/components/three/SceneCanvas'));
 
@@ -113,12 +114,19 @@ function App() {
   const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading');
   const [selectedDifficulty, setSelectedDifficulty] = useState<CampaignDifficulty | null>(null);
   const gameStatus = useGameStore((state) => state.status);
+  const currentStageId = useGameStore((state) => state.currentStageId);
+  const result = useGameStore((state) => state.result);
   const progress = useGameStore((state) => state.progress);
   const startStage = useGameStore((state) => state.startStage);
+  const returnToMenu = useGameStore((state) => state.returnToMenu);
   const markSceneUnavailable = useCallback(() => setSceneStatus('unavailable'), []);
   const sceneReady = sceneStatus === 'ready';
   const showMenu = gameStatus === 'idle';
-  const showResultPrompt = gameStatus === 'cleared' || gameStatus === 'failed';
+  const showResult = gameStatus === 'cleared' || gameStatus === 'failed';
+  const resultStage =
+    currentStageId !== null && isStageId(currentStageId)
+      ? getStageDefinition(currentStageId)
+      : null;
   const completedStageIds = [
     ...normalizeCompletedStageIds(progress.completedStages.map((stage) => stage.stageId)),
   ];
@@ -325,24 +333,16 @@ function App() {
           )}
         </section>
       ) : null}
-      {showResultPrompt ? (
-        <aside
-          className={[
-            styles.resultPrompt,
-            gameStatus === 'cleared' ? styles.clearedPrompt : styles.failedPrompt,
-          ].join(' ')}
-          role="status"
-          aria-live="polite"
-        >
-          <span>{gameStatus === 'cleared' ? 'STAGE CLEARED' : 'FLIGHT FAILED'}</span>
-          <strong>ENTER</strong>
-          <p>
-            {gameStatus === 'cleared'
-              ? '다음 단계 선택 화면으로 이동'
-              : '메인 · 단계 선택 화면으로 복귀'}
-          </p>
-          <small>R · 현재 단계 다시 시작</small>
-        </aside>
+      {showResult ? (
+        <ResultScreen
+          status={gameStatus}
+          result={result}
+          stage={resultStage}
+          onRestart={() => {
+            if (currentStageId !== null && isStageId(currentStageId)) startStage(currentStageId);
+          }}
+          onReturnToStages={returnToMenu}
+        />
       ) : null}
 
       {showMenu ? (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import {
   PerformanceMonitor,
   type PerformanceMonitorApi,
@@ -91,7 +91,6 @@ export function StageEnvironment({
   const currentStageId = useGameStore((state) => state.currentStageId);
   const stageRunId = useGameStore((state) => state.stageRunId);
   const status = useGameStore((state) => state.status);
-  const returnToMenu = useGameStore((state) => state.returnToMenu);
   const activeStageId =
     currentStageId !== null && isStageId(currentStageId) ? currentStageId : FIRST_STAGE_ID;
   const activeStage = getStageDefinition(activeStageId);
@@ -99,29 +98,6 @@ export function StageEnvironment({
   const corridorEnvironment = hasActiveRun
     ? activeStage.environment
     : getMenuCorridorEnvironment(menuDifficulty);
-
-  useEffect(() => {
-    const handleStageKey = (event: KeyboardEvent) => {
-      if (event.repeat) {
-        return;
-      }
-
-      if (
-        event.code !== 'Enter' ||
-        (status !== 'cleared' && status !== 'failed') ||
-        currentStageId === null ||
-        !isStageId(currentStageId)
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      returnToMenu();
-    };
-
-    window.addEventListener('keydown', handleStageKey);
-    return () => window.removeEventListener('keydown', handleStageKey);
-  }, [currentStageId, returnToMenu, status]);
 
   return (
     <>

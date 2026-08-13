@@ -96,8 +96,10 @@ export const GameHud = memo(function GameHud({ canvas, stage }: GameHudProps) {
       }
 
       if (event.code === 'KeyR') {
-        event.preventDefault();
-        restartStage();
+        if (statusRef.current === 'playing' || statusRef.current === 'paused') {
+          event.preventDefault();
+          restartStage();
+        }
         return;
       }
 

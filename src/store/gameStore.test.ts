@@ -324,8 +324,8 @@ describe('createGameStore', () => {
     }
   });
 
-  it('updates, clamps, and depletes health through the M2 domain function', () => {
-    const store = createGameStore();
+  it('updates, clamps, and latches depleted health through the M2 domain function', () => {
+    const store = createGameStore({ now: fixedClock });
 
     store.getState().startStage(1);
     expect(store.getState().updateHealth(-35)).toBe(65);
@@ -342,8 +342,45 @@ describe('createGameStore', () => {
       },
       status: 'failed',
       stars: 0,
-      result: null,
+      result: {
+        stageId: 1,
+        timeMs: 0,
+        remainingHealth: 0,
+        stars: 0,
+        timestamp: fixedTimestamp,
+      },
     });
+  });
+
+  it('latches the elapsed time and a cloned timestamp when damage first depletes health', () => {
+    const store = createGameStore({ now: fixedClock });
+
+    store.getState().startStage(2);
+    store.getState().setElapsedTimeMs(1947);
+    expect(store.getState().updateHealth(-100)).toBe(0);
+
+    const result = store.getState().result;
+    expect(result).toEqual({
+      stageId: 2,
+      timeMs: 1947,
+      remainingHealth: 0,
+      stars: 0,
+      timestamp: fixedTimestamp,
+    });
+    expect(result?.timestamp).not.toBe(fixedTimestamp);
+
+    const terminalState = store.getState();
+    expect(store.getState().updateHealth(100)).toBe(0);
+    expect(store.getState()).toBe(terminalState);
+  });
+
+  it('rejects an invalid damage clock before atomically depleting health', () => {
+    const store = createGameStore({ now: () => new Date(Number.NaN) });
+    store.getState().startStage(1);
+    store.getState().setElapsedTimeMs(1234);
+    const before = store.getState();
+    expect(() => store.getState().updateHealth(-100)).toThrow(RangeError);
+    expect(store.getState()).toBe(before);
   });
 
   it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
@@ -431,7 +468,7 @@ describe('createGameStore', () => {
     depletedStore.getState().startStage(1);
     depletedStore.getState().updateHealth(-100);
     const depletedState = depletedStore.getState();
-    expect(depletedStore.getState().land(true)).toBeNull();
+    expect(depletedStore.getState().land(true)).toBe(depletedState.result);
     expect(depletedStore.getState()).toBe(depletedState);
     expect(depletedStore.getState().progress.completedStages).toEqual([]);
 
@@ -505,7 +542,7 @@ describe('createGameStore', () => {
     store.getState().setElapsedTimeMs(2000);
     store.getState().setPlayerSnapshot({ x: 9, y: 9, z: 9 }, { x: 1, y: 1, z: 1 });
 
-    expect(store.getState().land(true)).toBeNull();
+    expect(store.getState().land(true)).toBe(terminalState.result);
     expect(store.getState()).toBe(terminalState);
 
     store.getState().startStage(2);
