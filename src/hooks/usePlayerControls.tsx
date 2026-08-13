@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, type MutableRefObject } from 'react';
 
 import {
+  DEFAULT_LOOK_INPUT_CONFIG,
   toggleFlightMode,
   updateLookAngles,
   type FlightMode,
   type LookAngles,
 } from '@/utils/playerControls';
+import { releaseCanvasPointerLock } from '@/utils/pointerLock';
 
 const MOVEMENT_CODES = new Set([
   'KeyW',
@@ -18,8 +20,6 @@ const MOVEMENT_CODES = new Set([
   'ArrowRight',
 ]);
 const FLIGHT_MODE_CODE = 'Space';
-const LOOK_SENSITIVITY = 0.002;
-const PITCH_LIMIT = Math.PI / 3;
 
 export interface PlayerControlRefs {
   readonly activeCodes: MutableRefObject<Set<string>>;
@@ -28,12 +28,19 @@ export interface PlayerControlRefs {
   readonly pointerLocked: MutableRefObject<boolean>;
 }
 
-export function usePlayerControls(canvas: HTMLCanvasElement | null): PlayerControlRefs {
+export function usePlayerControls(
+  canvas: HTMLCanvasElement | null,
+  inputEnabled = true,
+): PlayerControlRefs {
   const activeCodes = useRef(new Set<string>());
   const lookAngles = useRef<LookAngles>({ yaw: 0, pitch: 0 });
   const flightMode = useRef<FlightMode>('hover');
   const pointerLocked = useRef(false);
+  const inputEnabledRef = useRef(inputEnabled);
+  const pointerLockReleaseRequested = useRef(false);
   const controls = useMemo(() => ({ activeCodes, lookAngles, flightMode, pointerLocked }), []);
+
+  inputEnabledRef.current = inputEnabled;
 
   useEffect(() => {
     if (canvas === null) {
@@ -48,8 +55,20 @@ export function usePlayerControls(canvas: HTMLCanvasElement | null): PlayerContr
       flightModeKeyPressed = false;
     };
 
+    const releasePointerLock = () => {
+      pointerLocked.current = false;
+      clearMovement();
+
+      if (pointerLockReleaseRequested.current) {
+        return;
+      }
+
+      pointerLockReleaseRequested.current = releaseCanvasPointerLock(canvas);
+    };
+
     const syncPointerLock = () => {
       pointerLocked.current = document.pointerLockElement === canvas;
+      pointerLockReleaseRequested.current = false;
 
       if (!pointerLocked.current) {
         clearMovement();
@@ -57,6 +76,10 @@ export function usePlayerControls(canvas: HTMLCanvasElement | null): PlayerContr
     };
 
     const requestCanvasPointerLock = () => {
+      if (!inputEnabledRef.current) {
+        return;
+      }
+
       if (document.pointerLockElement === canvas) {
         pointerLocked.current = true;
         return;
@@ -80,7 +103,11 @@ export function usePlayerControls(canvas: HTMLCanvasElement | null): PlayerContr
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!pointerLocked.current || document.pointerLockElement !== canvas) {
+      if (
+        !inputEnabledRef.current ||
+        !pointerLocked.current ||
+        document.pointerLockElement !== canvas
+      ) {
         return;
       }
 
@@ -123,7 +150,11 @@ export function usePlayerControls(canvas: HTMLCanvasElement | null): PlayerContr
     };
 
     const handleMouseMove = (event: MouseEvent) => {
-      if (!pointerLocked.current || document.pointerLockElement !== canvas) {
+      if (
+        !inputEnabledRef.current ||
+        !pointerLocked.current ||
+        document.pointerLockElement !== canvas
+      ) {
         return;
       }
 
@@ -135,8 +166,7 @@ export function usePlayerControls(canvas: HTMLCanvasElement | null): PlayerContr
         lookAngles.current,
         event.movementX,
         event.movementY,
-        LOOK_SENSITIVITY,
-        PITCH_LIMIT,
+        DEFAULT_LOOK_INPUT_CONFIG,
       );
     };
 
@@ -173,10 +203,22 @@ export function usePlayerControls(canvas: HTMLCanvasElement | null): PlayerContr
       document.removeEventListener('pointerlockchange', syncPointerLock);
       document.removeEventListener('pointerlockerror', handlePointerLockError);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearMovement();
-      pointerLocked.current = false;
+      releasePointerLock();
     };
   }, [canvas]);
+
+  useEffect(() => {
+    if (inputEnabled || canvas === null) {
+      return;
+    }
+
+    activeCodes.current.clear();
+    pointerLocked.current = false;
+
+    if (!pointerLockReleaseRequested.current) {
+      pointerLockReleaseRequested.current = releaseCanvasPointerLock(canvas);
+    }
+  }, [canvas, inputEnabled]);
 
   return controls;
 }

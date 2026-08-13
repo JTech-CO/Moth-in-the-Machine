@@ -1,7 +1,8 @@
 # Moth in the Machine 기술 백서 (Technical Whitepaper)
 
-**버전**: 1.0  
+**버전**: 1.1\
 **작성일**: 2026년 7월 31일  
+**개정일**: 2026년 8월 12일\
 **참고 문서**: 기획서 v1.0, UI/UX 레이아웃 문서 v1.0
 
 ## 1. 프로젝트 개요 (Project Overview)
@@ -27,16 +28,17 @@
 
 ### 2.2. 사용자 상호작용 로직 (Interaction Logic)
 - **이벤트 처리 (Event Handling)**:
-  - **Input**: Keyboard (WASD/화살표 + Space), Mouse (시야 회전), Touch (가상 조이스틱 + 드래그)
-  - **Action**: 목표 지점 착지 시 자동 판정 → 체력/시간 계산 → 결과 화면 전환. 장애물 충돌 시 실시간 체력 감소 + 비주얼 피드백(화면 가장자리 붉은 오버레이)
-- **데이터 검증 (Validation)**: 클라이언트 사이드에서 체력 0 이하, 착지 좌표 오차(±0.5 unit) 검증. 서버 검증 불필요(오프라인 우선).
+  - **Input**: Keyboard (WASD/화살표 + Space, T 시점 전환), Mouse (시야 회전), Touch (가상 조이스틱 + 드래그)
+  - **Action**: 바닥·천장·좌우 벽의 목표 면에 착지 시 자동 판정 → 체력/시간 계산 → 중앙 결과 안내. terminal 진입 즉시 Canvas pointer lock을 해제하고 커서를 복원하며, Enter는 선택 난이도의 단계 목록 복귀, R은 현재 단계 재시작. 장애물 충돌 시 실시간 체력 감소 + 비주얼 피드백(화면 가장자리 붉은 오버레이)
+- **데이터 검증 (Validation)**: 클라이언트 사이드에서 체력 0 이하, 목표 면의 접선 방향 반경(0.5 unit), 안쪽 법선 방향 접근과 swept contact를 검증. 서버 검증 불필요(오프라인 우선).
 
 ### 2.3. 데이터 모델 (Data Model)
 주요 모듈에서 다루는 데이터 객체(Entity)의 스키마를 정의합니다.
-1.  **Stage**: id(Number), name(String), targetPosition({x,y,z}), obstacles(Array), bestTime(Number), bestStars(Number 0~3)
+1.  **Stage**: id(Number 1~19), name(String), difficulty(tutorial | easy | normal | hard), environment(relay-bay | switching-gallery | logic-labyrinth), target({position, surface, inwardNormal}), obstacles(Array), bestTime(Number), bestStars(Number 0~3)
 2.  **PlayerState**: health(Number 0~100), position({x,y,z}), velocity({x,y,z}), isLanded(Boolean)
 3.  **Result**: stageId(Number), time(Number), remainingHealth(Number), stars(Number), timestamp(Date)
 4.  **Progress**: completedStages(Array<Stage>), totalStars(Number) → LocalStorage에 직렬화 저장
+5.  **Campaign**: 조작 튜토리얼 1개 + EASY 6개 + NORMAL 6개 + HARD 6개 = 총 19단계. ID는 데이터 카탈로그의 안정적인 정렬·참조 키이며, 런타임은 전역 순차 진행 대신 난이도 선택 → 해당 난이도의 개별 단계 선택 흐름을 사용한다.
 
 ### 2.4. 출력 및 성능 기준 (Output & Performance)
 - **결과물 형식**: Canvas 기반 PNG Blob (1080×1080 정사각 공유 이미지), LocalStorage 저장, 클립보드 복사
@@ -89,17 +91,31 @@ const useGameStore = create((set, get) => ({
 ```
 
 ### 4.2. 주요 동작 파이프라인 (Main Workflow)
-1.  **초기화 (Init)**: Vite 앱 로드 → LocalStorage에서 진행 상황 복원 → Three.js 씬 초기화(라이트, 안개, 포스트프로세싱) → 첫 스테이지 또는 스테이지 선택 화면 렌더
-2.  **이벤트 처리 (Process)**: 입력 → 나방 물리 업데이트(속도/관성) → 장애물 AABB/구 충돌 검사 → 체력 감소 → 목표 좌표 도달 시 착지 판정
+1.  **초기화 (Init)**: Vite 앱 로드 → LocalStorage에서 진행 상황 복원 → Three.js 씬 초기화(라이트, 안개) → 메인 화면의 난이도 선택 렌더
+2.  **이벤트 처리 (Process)**: 입력 → 나방 fixed-step 물리 후보 위치 계산 → 이전·후보 위치 사이의 목표 면 swept contact 판정 및 최초 terminal 결과 latch → 구조물/장애물 AABB·구 충돌과 bounce 처리 → 체력 감소
 3.  **렌더링/갱신 (Update)**: requestAnimationFrame 루프 내에서 카메라 추적 + HUD 오버레이 동기화. 결과 화면 진입 시 Canvas에 별·시간·체력 바를 그려 공유 이미지 생성
 
 ### 4.3. 핵심 알고리즘 (Core Algorithms)
-- **착지 판정 알고리즘**: 플레이어 위치와 목표 좌표의 유클리드 거리가 0.5 이하이고, Y축 속도가 거의 0일 때 성공으로 간주. 체력 잔량에 따라 별 부여 (100% → 3, ≥50% → 2, >0 → 1)
+- **다중 표면 착지 판정 알고리즘**:
+  - 목표는 position, surface, 실내를 향하는 단위 normal을 가진다. 바닥·천장·좌우 벽을 동일한 면 계약으로 처리한다.
+  - 이전 위치와 후보 위치의 선분이 목표 평면을 통과하는지 swept 방식으로 먼저 검사하고, 접점을 목표 면의 접선 공간에 투영한 반경이 0.5 unit 이내인지 확인한다.
+  - landing-ready 접근 속도의 법선 성분이 안전 범위일 때 성공한다. 목표 접촉으로 생성된 최초 terminal 결과는 비가역 latch되어 뒤이은 구조물 충돌·관성 bounce·바닥 접촉이 성공을 실패로 뒤집지 못한다.
+  - 체력 잔량에 따라 별을 부여한다 (100% → 3, ≥50% → 2, >0 → 1).
 - **장애물 데미지 계산**:  
-  - 스파크/전선: 접촉 프레임당 15~25  
+  - 전선: canonical 60Hz 접촉 tick당 15 / 스파크: tick당 25
   - 과열 릴레이 범위: 거리 반비례 초당 8~20  
   - 진공관 폭발 존: 일회성 40
 - **공유 이미지 생성**: Canvas 2D Context에 배경 그라데이션 → 로고 → 큰 별 아이콘 → 시간/체력 텍스트 → 해시태그 순으로 드로잉 후 toBlob()
+### 4.4. 캠페인·회랑 구성 (Campaign & Corridor Layouts)
+- **선택 흐름**: 메인 화면에서 TUTORIAL·EASY·NORMAL·HARD 난이도를 먼저 선택하고, 열린 난이도 안에서는 1개 또는 6개의 개별 단계 중 원하는 단계를 선택한다. 선택한 난이도는 실행 중에도 보존하며, 완료·실패 상태에서 Enter를 누르면 방금 선택한 난이도의 개별 단계 선택 화면으로 돌아간다. 전역 다음 단계로 자동 전환하지 않는다.
+- **카메라·terminal 흐름**: 플레이는 기본 3인칭 추적 카메라로 시작하고 T 입력으로 1인칭·3인칭을 토글한다. clear/fail 시 중앙 결과 안내를 표시하며 Canvas pointer lock을 즉시 해제해 커서를 복원한다. R 재시작 시 같은 단계의 기본 플레이 상태로 돌아간다.
+- **해금 규칙**: TUTORIAL은 항상 플레이할 수 있다. 튜토리얼 클리어 후 EASY, 서로 다른 EASY 단계 3개 이상 클리어 후 NORMAL, 서로 다른 NORMAL 단계 3개 이상 클리어 후 HARD를 해금한다. 중복 재클리어는 해금 개수에 중복 산입하지 않으며 LocalStorage에서 복원한 완료 기록에도 같은 규칙을 적용한다.
+- **튜토리얼 1 + EASY 6**: M4의 Mark II 릴레이 베이(relay-bay)를 사용해 기본 비행·착지와 장애물 조합을 학습한다.
+- **NORMAL 6**: 교차 게이트와 천장 버스가 있는 switching-gallery를 사용한다. 구조물과 장애물의 간격이 직선 비행을 차단해 좌우 경로 판단을 요구한다.
+- **HARD 6**: 바닥·천장 데크, 좌우 게이트와 중앙 코어가 교차하는 logic-labyrinth를 사용한다. 고도와 방향을 함께 바꾸는 경로 선택을 강제한다.
+- NORMAL과 HARD는 바닥 외에도 천장·좌우 벽 목표를 사용한다. 목표 메시의 방향과 물리 법선은 같은 canonical target 정의에서 파생한다.
+- **가시성·성능**: switching-gallery와 logic-labyrinth에는 은은한 분산 보조 조명을 배치해 경로·장애물·목표 접근면의 최소 가시성을 보장한다. 보조 조명은 그림자를 생성하지 않고 저비용 광원 수와 기존 적응형 DPR 정책 안에서 운용해 데스크톱 60fps 성능 예산을 유지한다.
+- 나방은 몸통·앞날개·뒷날개·더듬이·다리의 실루엣을 분리한 primitive 모델을 사용한다. 전선·스파크·과열 릴레이·진공관 장애물 역시 역할과 충돌 범위를 읽을 수 있는 primitive 조합으로 표현한다.
 
 ## 5. UI 구현 가이드 (Implementation Guide)
 *디자인 시스템을 코드로 구현하기 위한 기술적 설정값입니다.*
@@ -130,7 +146,7 @@ moth-in-the-machine/
 │   ├── hooks/              # useKeyboard, useGameLoop, useShareImage
 │   ├── pages/              # Home, Play, StageSelect (React Router)
 │   ├── store/              # gameStore.ts (Zustand)
-│   ├── utils/              # collision.ts, starCalculator.ts, shareCanvas.ts
+│   ├── utils/              # stages.ts, collision.ts, corridorLayouts.ts, starCalculator.ts
 │   ├── App.tsx
 │   └── main.tsx
 ├── public/
@@ -146,7 +162,7 @@ moth-in-the-machine/
     - 외부 API 호출 없음. LocalStorage 데이터는 JSON.stringify 전 단순 검증만 수행.
     - 공유 이미지 생성 시 사용자 입력 텍스트 없음 → XSS 위험 제로.
 2.  **성능 최적화 (Optimization)**:
-    - 3D 모델은 glTF + Draco 압축 필수.
+    - M6 환경·나방·장애물은 경량 primitive와 instancing을 우선한다. 이후 외부 3D 에셋을 도입할 때만 glTF + Draco 압축을 필수로 한다.
     - 장애물 충돌은 프레임마다 전체 검사하지 않고 Spatial Hash 또는 단순 거리 컬링 적용.
     - 공유 이미지는 OffscreenCanvas 가능 시 사용, 아니면 메인 스레드에서 빠르게 생성 후 즉시 revokeObjectURL.
     - React.memo + useMemo로 HUD 리렌더링 최소화.

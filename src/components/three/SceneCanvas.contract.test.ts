@@ -41,12 +41,24 @@ interface WebGLFallbackContract {
 }
 
 interface StageEnvironmentContract {
+  readonly menuDifficulty?: 'tutorial' | 'easy' | 'normal' | 'hard' | null;
   readonly onPerformanceFactorChange: (factor: number) => void;
 }
 
 const captured = vi.hoisted(() => ({
   canvas: null as CanvasContract | null,
   stageEnvironment: null as StageEnvironmentContract | null,
+  gameState: {
+    currentStageId: null as number | null,
+    player: { health: 100 },
+    status: 'idle',
+    stars: 0,
+    progress: {
+      completedStages: [] as { stageId: number; bestTimeMs: number; bestStars: number }[],
+      totalStars: 0,
+    },
+    startStage: () => undefined,
+  },
 }));
 
 vi.mock('@react-three/fiber', () => ({
@@ -63,7 +75,11 @@ vi.mock('@/components/three/StageEnvironment', () => ({
   },
 }));
 
-describe('M5 scene canvas contract', () => {
+vi.mock('@/hooks/useGameStore', () => ({
+  useGameStore: (selector: (state: typeof captured.gameState) => unknown) =>
+    selector(captured.gameState),
+}));
+describe('M6 scene canvas contract', () => {
   beforeEach(() => {
     captured.canvas = null;
     captured.stageEnvironment = null;
@@ -73,20 +89,78 @@ describe('M5 scene canvas contract', () => {
     vi.unstubAllGlobals();
   });
 
-  it('keeps the project title in the initial HTML while the lazy scene loads', () => {
+  it('renders an explicit, non-playing mission introduction while the lazy scene loads', () => {
     const markup = renderToString(createElement(App));
+    expect(markup).toContain('19 STAGES');
+    expect(markup).toContain('EASY / NORMAL / HARD');
 
     expect(markup).toContain('id="project-title"');
     expect(markup).toContain('Moth');
     expect(markup).toContain('Machine');
+    expect(markup).toContain('실제 기록에 남은');
+    expect(markup).toContain('aria-label="기본 조작법"');
+    expect(markup).toContain('START FLIGHT');
+    expect(markup).toContain('1인칭 / 3인칭');
+    expect(markup).toContain('<strong>T</strong>');
+    expect(markup).toContain('disabled=""');
     expect(markup).toContain('FLIGHT SYSTEMS SYNCING');
+    expect(markup).toContain('튜토리얼 클리어 시 플레이 가능');
+    expect(markup).toContain('EASY 단계 3개 이상 클리어 시 플레이 가능');
+    expect(markup).toContain('NORMAL 단계 3개 이상 클리어 시 플레이 가능');
     expect(markup).toContain('INITIALIZING RELAY BAY');
+    expect(markup).not.toContain('aria-label="Moth health"');
+  });
+  it('counts only distinct canonical campaign stages in the menu total', () => {
+    const originalProgress = captured.gameState.progress;
+
+    captured.gameState.progress = {
+      completedStages: [
+        { stageId: 1, bestTimeMs: 1_000, bestStars: 3 },
+        { stageId: 1, bestTimeMs: 900, bestStars: 3 },
+        { stageId: 20, bestTimeMs: 800, bestStars: 3 },
+      ],
+      totalStars: 9,
+    };
+
+    try {
+      const markup = renderToString(createElement(App));
+      const normalizedMarkup = markup.replace(/<!-- -->/g, '');
+
+      expect(normalizedMarkup).toContain('1 / 19 CLEARED');
+      expect(normalizedMarkup).not.toContain('3 / 19 CLEARED');
+    } finally {
+      captured.gameState.progress = originalProgress;
+    }
+  });
+  it.each([
+    ['cleared', 'STAGE CLEARED', '다음 단계 선택 화면으로 이동'],
+    ['failed', 'FLIGHT FAILED', '메인 · 단계 선택 화면으로 복귀'],
+  ] as const)('shows an explicit Enter prompt after a %s run', (status, heading, action) => {
+    const originalStatus = captured.gameState.status;
+    const originalStageId = captured.gameState.currentStageId;
+
+    captured.gameState.status = status;
+    captured.gameState.currentStageId = 2;
+
+    try {
+      const markup = renderToString(createElement(App));
+
+      expect(markup).toContain('role="status"');
+      expect(markup).toContain(heading);
+      expect(markup).toContain('ENTER');
+      expect(markup).toContain(action);
+      expect(markup).toContain('R · 현재 단계 다시 시작');
+    } finally {
+      captured.gameState.status = originalStatus;
+      captured.gameState.currentStageId = originalStageId;
+    }
   });
 
   it('configures one full-time Canvas with the documented camera and renderer budget', () => {
     const onAvailabilityChange = vi.fn<(availability: SceneAvailability) => void>();
     const markup = renderToStaticMarkup(
       createElement(SceneCanvas, {
+        menuDifficulty: 'normal',
         onAvailabilityChange,
       }),
     );
@@ -111,6 +185,7 @@ describe('M5 scene canvas contract', () => {
       preserveDrawingBuffer: false,
     });
     expect(canvas?.shadows).toBe(false);
+    expect(captured.stageEnvironment?.menuDifficulty).toBe('normal');
     expect(captured.stageEnvironment?.onPerformanceFactorChange).toBeTypeOf('function');
     expect(() => captured.stageEnvironment!.onPerformanceFactorChange(0.5)).not.toThrow();
     expect(onAvailabilityChange).not.toHaveBeenCalled();

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { createDefaultPlayerState } from '@/store/gameTypes';
 import { createGameStore } from '@/store/gameStore';
 import { GAME_SCHEMA_VERSION, GAME_STORAGE_KEY, type GameStorage } from '@/store/persistence';
+import { getStageDefinition } from '@/utils/stages';
 
 class MemoryStorage implements GameStorage {
   readonly values = new Map<string, string>();
@@ -31,6 +33,7 @@ describe('createGameStore', () => {
         isLanded: false,
       },
       currentStageId: null,
+      stageRunId: 0,
       elapsedTimeMs: 0,
       status: 'idle',
       stars: 0,
@@ -62,16 +65,88 @@ describe('createGameStore', () => {
     expect(store.getState()).toMatchObject({
       player: {
         health: 100,
-        position: { x: 0, y: 0, z: 0 },
+        position: getStageDefinition(2).spawnPosition,
         velocity: { x: 0, y: 0, z: 0 },
         isLanded: false,
       },
       currentStageId: 2,
+      stageRunId: 2,
       elapsedTimeMs: 0,
       status: 'playing',
       stars: 0,
       result: null,
     });
+  });
+  it('returns to the campaign menu without discarding durable progress or settings', () => {
+    const store = createGameStore({ now: fixedClock });
+
+    store.getState().updateSettings({ showControlHints: false });
+    store.getState().startStage(1);
+    store.getState().setElapsedTimeMs(2000);
+    store.getState().updateHealth(-20);
+    store.getState().land(true);
+
+    const completedProgress = store.getState().progress;
+    store.getState().returnToMenu();
+
+    expect(store.getState()).toMatchObject({
+      player: createDefaultPlayerState(),
+      currentStageId: null,
+      stageRunId: 1,
+      elapsedTimeMs: 0,
+      status: 'idle',
+      stars: 0,
+      result: null,
+      settings: { showControlHints: false },
+    });
+    expect(store.getState().progress).toBe(completedProgress);
+
+    const idleState = store.getState();
+    store.getState().returnToMenu();
+    expect(store.getState()).toBe(idleState);
+  });
+
+  it('clones the canonical stage spawn and increments the run token on retries', () => {
+    const store = createGameStore();
+    const stage = getStageDefinition(1);
+
+    store.getState().startStage(stage.id);
+    expect(store.getState()).toMatchObject({
+      currentStageId: stage.id,
+      stageRunId: 1,
+      player: {
+        position: stage.spawnPosition,
+        health: 100,
+        velocity: { x: 0, y: 0, z: 0 },
+        isLanded: false,
+      },
+    });
+    expect(store.getState().player.position).not.toBe(stage.spawnPosition);
+
+    store.getState().updateHealth(-40);
+    store.getState().setElapsedTimeMs(1947);
+    store.getState().startStage(stage.id);
+
+    expect(store.getState()).toMatchObject({
+      currentStageId: stage.id,
+      stageRunId: 2,
+      elapsedTimeMs: 0,
+      status: 'playing',
+      player: {
+        position: stage.spawnPosition,
+        health: 100,
+        velocity: { x: 0, y: 0, z: 0 },
+        isLanded: false,
+      },
+    });
+  });
+
+  it.each([20, 99])('rejects an unsupported stage id atomically: %s', (stageId) => {
+    const store = createGameStore();
+    const before = store.getState();
+
+    expect(() => store.getState().startStage(stageId)).toThrow(RangeError);
+    expect(store.getState()).toBe(before);
   });
 
   it.each([0, -1, 1.5, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1])(
@@ -141,13 +216,13 @@ describe('createGameStore', () => {
     const store = createGameStore();
 
     store.getState().startStage(1);
-    store.getState().updateHealth(-35);
+    expect(store.getState().updateHealth(-35)).toBe(65);
     expect(store.getState().player.health).toBe(65);
 
-    store.getState().updateHealth(100);
+    expect(store.getState().updateHealth(100)).toBe(100);
     expect(store.getState().player.health).toBe(100);
 
-    store.getState().updateHealth(-500);
+    expect(store.getState().updateHealth(-500)).toBe(0);
     expect(store.getState()).toMatchObject({
       player: {
         health: 0,
@@ -329,6 +404,33 @@ describe('createGameStore', () => {
     });
   });
 
+  it('fully resets position, health, velocity, and timer after a failed run', () => {
+    const store = createGameStore();
+    const spawn = getStageDefinition(3).spawnPosition;
+
+    store.getState().startStage(3);
+    store.getState().setPlayerSnapshot({ x: -2.15, y: -1.15, z: -17.8 }, { x: 1, y: -1, z: 0.5 });
+    store.getState().setElapsedTimeMs(1947);
+    expect(store.getState().updateHealth(-100)).toBe(0);
+
+    store.getState().startStage(3);
+
+    expect(store.getState()).toMatchObject({
+      currentStageId: 3,
+      stageRunId: 2,
+      elapsedTimeMs: 0,
+      status: 'playing',
+      stars: 0,
+      result: null,
+      player: {
+        health: 100,
+        position: spawn,
+        velocity: { x: 0, y: 0, z: 0 },
+        isLanded: false,
+      },
+    });
+  });
+
   it('merges fastest time and highest stars independently per stage', () => {
     const store = createGameStore({ now: fixedClock });
 
@@ -393,6 +495,7 @@ describe('createGameStore', () => {
         isLanded: false,
       },
       currentStageId: null,
+      stageRunId: 0,
       elapsedTimeMs: 0,
       status: 'idle',
       stars: 0,

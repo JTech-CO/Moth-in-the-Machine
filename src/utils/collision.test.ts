@@ -5,10 +5,14 @@ import {
   intersectsAabb,
   intersectsSphereAabb,
   intersectsSpheres,
+  isLandingSurfaceContactSuccessful,
   isLandingSuccessful,
   LANDING_MAX_DISTANCE,
+  LANDING_MAX_NORMAL_SPEED,
+  LANDING_PLANE_TOLERANCE,
   LANDING_STOP_SPEED,
   magnitude3D,
+  measureLandingSurfaceContact,
   type Aabb,
   type Sphere,
   type Vec3,
@@ -226,5 +230,143 @@ describe('landing success', () => {
     expect(() =>
       isLandingSuccessful(point(1, 0, 0), point(0, 0, 0), point(Number.NaN, 0, 0)),
     ).toThrow(RangeError);
+  });
+});
+describe('multi-surface landing contact', () => {
+  const surfaces = [
+    {
+      name: 'floor',
+      normal: point(0, 1, 0),
+      previous: point(0, 0.2, 0),
+      velocity: point(0, -1, 0),
+    },
+    {
+      name: 'ceiling',
+      normal: point(0, -1, 0),
+      previous: point(0, -0.2, 0),
+      velocity: point(0, 1, 0),
+    },
+    {
+      name: 'left wall',
+      normal: point(1, 0, 0),
+      previous: point(0.2, 0, 0),
+      velocity: point(-1, 0, 0),
+    },
+    {
+      name: 'right wall',
+      normal: point(-1, 0, 0),
+      previous: point(-0.2, 0, 0),
+      velocity: point(1, 0, 0),
+    },
+  ] as const;
+
+  it.each(surfaces)(
+    'accepts an inclusive safe contact on the $name',
+    ({ normal, previous, velocity }) => {
+      expect(
+        isLandingSurfaceContactSuccessful(
+          { previousPosition: previous, position: point(0, 0, 0), approachVelocity: velocity },
+          { position: point(0, 0, 0), normal },
+        ),
+      ).toBe(true);
+    },
+  );
+
+  it('measures radial distance in the surface plane and accepts inclusive limits', () => {
+    const measurement = measureLandingSurfaceContact(
+      {
+        previousPosition: point(LANDING_MAX_DISTANCE, 0.2, 0),
+        position: point(LANDING_MAX_DISTANCE, LANDING_PLANE_TOLERANCE, 0),
+        approachVelocity: point(0, -LANDING_MAX_NORMAL_SPEED, 0),
+      },
+      { position: point(0, 0, 0), normal: point(0, 1, 0) },
+    );
+
+    expect(measurement).toMatchObject({
+      radialDistance: LANDING_MAX_DISTANCE,
+      normalDistance: LANDING_PLANE_TOLERANCE,
+      normalSpeed: LANDING_MAX_NORMAL_SPEED,
+      contacted: true,
+      approaching: true,
+      insideRadius: true,
+      safeApproach: true,
+    });
+  });
+
+  it('uses the swept plane intersection for radial contact before a later bounce', () => {
+    const measurement = measureLandingSurfaceContact(
+      {
+        previousPosition: point(0.4, 0.1, 0),
+        position: point(0.6, -0.1, 0),
+        approachVelocity: point(1, -1, 0),
+      },
+      { position: point(0, 0, 0), normal: point(0, 1, 0) },
+    );
+
+    expect(measurement.contacted).toBe(true);
+    expect(measurement.radialDistance).toBeCloseTo(0.5, 12);
+    expect(measurement.insideRadius).toBe(true);
+  });
+
+  it('distinguishes no contact, an outside hit, an unsafe hit, and departure', () => {
+    const target = { position: point(0, 0, 0), normal: point(1, 0, 0) };
+    const measure = (position: Vec3, approachVelocity: Vec3) =>
+      measureLandingSurfaceContact(
+        { previousPosition: point(0.2, 0, 0), position, approachVelocity },
+        target,
+      );
+
+    expect(measure(point(LANDING_PLANE_TOLERANCE + 0.001, 0, 0), point(-1, 0, 0)).contacted).toBe(
+      false,
+    );
+    expect(measure(point(0, 0.501, 0), point(-1, 0, 0)).insideRadius).toBe(false);
+    expect(measure(point(0, 0, 0), point(-2.001, 0, 0)).safeApproach).toBe(false);
+    expect(measure(point(0, 0, 0), point(0.001, 0, 0)).approaching).toBe(false);
+  });
+
+  it('validates unit normals, finite limits, and derived arithmetic', () => {
+    const motion = {
+      previousPosition: point(0, 0.1, 0),
+      position: point(0, 0, 0),
+      approachVelocity: point(0, -1, 0),
+    };
+
+    expect(() =>
+      measureLandingSurfaceContact(motion, {
+        position: point(0, 0, 0),
+        normal: point(0, 2, 0),
+      }),
+    ).toThrow(RangeError);
+    expect(() =>
+      measureLandingSurfaceContact(
+        motion,
+        { position: point(0, 0, 0), normal: point(0, 1, 0) },
+        { radius: Number.NaN },
+      ),
+    ).toThrow(RangeError);
+    expect(() =>
+      measureLandingSurfaceContact(
+        { ...motion, approachVelocity: point(Number.MAX_VALUE, Number.MAX_VALUE, 0) },
+        { position: point(0, 0, 0), normal: point(Math.SQRT1_2, Math.SQRT1_2, 0) },
+      ),
+    ).toThrow(RangeError);
+  });
+
+  it('does not mutate frozen motion, target, or limits', () => {
+    const motion = Object.freeze({
+      previousPosition: Object.freeze(point(0, 0.1, 0)),
+      position: Object.freeze(point(0, 0, 0)),
+      approachVelocity: Object.freeze(point(0, -1, 0)),
+    });
+    const target = Object.freeze({
+      position: Object.freeze(point(0, 0, 0)),
+      normal: Object.freeze(point(0, 1, 0)),
+    });
+    const limits = Object.freeze({ radius: 0.4, planeTolerance: 0.01, maxNormalSpeed: 1 });
+
+    expect(isLandingSurfaceContactSuccessful(motion, target, limits)).toBe(true);
+    expect(motion.previousPosition.y).toBe(0.1);
+    expect(target.normal.y).toBe(1);
+    expect(limits).toEqual({ radius: 0.4, planeTolerance: 0.01, maxNormalSpeed: 1 });
   });
 });

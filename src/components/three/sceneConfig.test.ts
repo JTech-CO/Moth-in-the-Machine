@@ -20,8 +20,11 @@ import {
   SCENE_COLORS,
   VACUUM_TUBE_POSITIONS,
 } from '@/components/three/sceneConfig';
+import { findBlockingStructures } from '@/utils/corridorLayouts';
+import { createHazardRuntimeState, evaluateStageHazards } from '@/utils/stageHazards';
+import { STAGE_DEFINITIONS } from '@/utils/stages';
 
-describe('M5 scene configuration', () => {
+describe('M6 scene configuration', () => {
   it('uses the documented 1947 laboratory design tokens', () => {
     expect(SCENE_COLORS).toMatchObject({
       background: '#0a0e17',
@@ -127,6 +130,59 @@ describe('M5 scene configuration', () => {
     expect(PLAYER_CENTER_BOUNDS.max.z).toBe(
       CORRIDOR_INTERIOR_BOUNDS.max.z - PLAYER_CONFIG.halfExtents[2],
     );
+  });
+
+  it('keeps every M6 spawn and target landable inside the player bounds', () => {
+    const playerHalfExtents = {
+      x: PLAYER_CONFIG.halfExtents[0],
+      y: PLAYER_CONFIG.halfExtents[1],
+      z: PLAYER_CONFIG.halfExtents[2],
+    };
+
+    for (const stage of STAGE_DEFINITIONS) {
+      expect(stage.spawnPosition).toEqual({
+        x: PLAYER_CONFIG.spawn[0],
+        y: PLAYER_CONFIG.spawn[1],
+        z: PLAYER_CONFIG.spawn[2],
+      });
+      const targetAxis =
+        stage.target.surface === 'floor' || stage.target.surface === 'ceiling' ? 'y' : 'x';
+      const expectedBoundary =
+        stage.target.surface === 'floor' || stage.target.surface === 'left-wall'
+          ? PLAYER_CENTER_BOUNDS.min[targetAxis]
+          : PLAYER_CENTER_BOUNDS.max[targetAxis];
+
+      expect(stage.target.position[targetAxis]).toBeCloseTo(expectedBoundary);
+      expect(stage.targetPosition).toBe(stage.target.position);
+      expect(stage.targetSurface).toBe(stage.target.surface);
+
+      for (const point of [stage.spawnPosition, stage.target.position]) {
+        for (const axis of ['x', 'y', 'z'] as const) {
+          expect(point[axis]).toBeGreaterThanOrEqual(PLAYER_CENTER_BOUNDS.min[axis]);
+          expect(point[axis]).toBeLessThanOrEqual(PLAYER_CENTER_BOUNDS.max[axis]);
+        }
+      }
+
+      for (const point of [stage.spawnPosition, stage.target.position]) {
+        const evaluation = evaluateStageHazards(
+          stage.obstacles,
+          point,
+          playerHalfExtents,
+          PLAYER_CONFIG.fixedDelta,
+          createHazardRuntimeState(),
+        );
+
+        expect(evaluation.damage).toBe(0);
+        expect(evaluation.blockingObstacleIds).toEqual([]);
+      }
+
+      expect(
+        findBlockingStructures(stage.environment, stage.spawnPosition, playerHalfExtents),
+      ).toEqual([]);
+      expect(
+        findBlockingStructures(stage.environment, stage.target.position, playerHalfExtents),
+      ).toEqual([]);
+    }
   });
 
   it('adapts DPR within the configured quality budget', () => {

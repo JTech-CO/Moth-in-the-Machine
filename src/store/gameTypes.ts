@@ -34,10 +34,10 @@ export interface GameSettings {
   readonly showControlHints: boolean;
 }
 
-export function createDefaultPlayerState(): PlayerState {
+export function createDefaultPlayerState(position: Vec3 = { x: 0, y: 0, z: 0 }): PlayerState {
   return {
     health: 100,
-    position: { x: 0, y: 0, z: 0 },
+    position: { ...position },
     velocity: { x: 0, y: 0, z: 0 },
     isLanded: false,
   };

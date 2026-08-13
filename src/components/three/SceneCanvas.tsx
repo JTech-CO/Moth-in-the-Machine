@@ -10,11 +10,13 @@ import {
   SCENE_COLORS,
 } from '@/components/three/sceneConfig';
 import { StageEnvironment } from '@/components/three/StageEnvironment';
+import type { StageDifficulty } from '@/utils/stages';
 
 export type SceneAvailability = 'ready' | 'unavailable';
 
 interface SceneCanvasProps {
   readonly onAvailabilityChange: (availability: SceneAvailability) => void;
+  readonly menuDifficulty?: StageDifficulty | null;
 }
 
 interface WebGLFallbackProps {
@@ -37,7 +39,10 @@ function WebGLFallback({ onUnavailable }: WebGLFallbackProps) {
   );
 }
 
-export default function SceneCanvas({ onAvailabilityChange }: SceneCanvasProps) {
+export default function SceneCanvas({
+  menuDifficulty = null,
+  onAvailabilityChange,
+}: SceneCanvasProps) {
   const initialDpr = useRef(
     calculateAdaptiveDpr(
       1,
@@ -81,7 +86,10 @@ export default function SceneCanvas({ onAvailabilityChange }: SceneCanvasProps) 
           onAvailabilityChange('ready');
         }}
       >
-        <StageEnvironment onPerformanceFactorChange={updateAdaptiveDpr} />
+        <StageEnvironment
+          menuDifficulty={menuDifficulty}
+          onPerformanceFactorChange={updateAdaptiveDpr}
+        />
       </Canvas>
 
       <p className={styles.visuallyHidden}>

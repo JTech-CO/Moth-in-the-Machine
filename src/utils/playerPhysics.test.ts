@@ -239,6 +239,64 @@ describe('player physics', () => {
 
       expect(result.velocity.y).toBeCloseTo(-CONFIG.landingDescentSpeed, 1);
     });
+
+    it('approaches a ceiling target along its inward normal', () => {
+      const result = runFor(120, 0.5, {
+        ...HOVER_INTENT,
+        mode: 'landing-ready',
+        landingSurfaceNormal: { x: 0, y: -1, z: 0 },
+      });
+
+      expect(result.position.y).toBeGreaterThan(0);
+      expect(result.velocity.y).toBeGreaterThan(0);
+      expect(result.velocity.x).toBeCloseTo(0);
+      expect(result.velocity.z).toBeCloseTo(0);
+    });
+
+    it.each([
+      {
+        label: 'left wall',
+        normal: { x: 1, y: 0, z: 0 },
+        expectedDirection: -1,
+      },
+      {
+        label: 'right wall',
+        normal: { x: -1, y: 0, z: 0 },
+        expectedDirection: 1,
+      },
+    ])(
+      'approaches the $label while retaining tangential steering',
+      ({ normal, expectedDirection }) => {
+        const result = runFor(120, 0.5, {
+          ...HOVER_INTENT,
+          forward: 1,
+          mode: 'landing-ready',
+          landingSurfaceNormal: normal,
+        });
+
+        expect(Math.sign(result.position.x)).toBe(expectedDirection);
+        expect(Math.sign(result.velocity.x)).toBe(expectedDirection);
+        expect(result.position.z).toBeLessThan(0);
+        expect(result.velocity.z).toBeLessThan(0);
+      },
+    );
+
+    it('normalizes a finite landing normal without mutating it', () => {
+      const normal = Object.freeze({ x: 0, y: -2, z: 0 });
+      const result = simulatePlayerStep(
+        state(),
+        {
+          ...HOVER_INTENT,
+          mode: 'landing-ready',
+          landingSurfaceNormal: normal,
+        },
+        0.1,
+        CONFIG,
+      );
+
+      expect(result.position.y).toBeGreaterThan(0);
+      expect(normal).toEqual({ x: 0, y: -2, z: 0 });
+    });
   });
 
   describe('corridor bounds', () => {
@@ -361,6 +419,30 @@ describe('player physics', () => {
         simulatePlayerStep(
           state(),
           { ...HOVER_INTENT, pitch: Number.NEGATIVE_INFINITY },
+          0.1,
+          CONFIG,
+        ),
+      ).toThrow(RangeError);
+      expect(() =>
+        simulatePlayerStep(
+          state(),
+          {
+            ...HOVER_INTENT,
+            mode: 'landing-ready',
+            landingSurfaceNormal: { x: 0, y: 0, z: 0 },
+          },
+          0.1,
+          CONFIG,
+        ),
+      ).toThrow(RangeError);
+      expect(() =>
+        simulatePlayerStep(
+          state(),
+          {
+            ...HOVER_INTENT,
+            mode: 'landing-ready',
+            landingSurfaceNormal: { x: Number.NaN, y: 0, z: 0 },
+          },
           0.1,
           CONFIG,
         ),

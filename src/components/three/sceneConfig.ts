@@ -49,6 +49,7 @@ export const CAMERA_FOLLOW_CONFIG = {
   lookAhead: 1.65,
   positionDamping: 6.5,
   targetDamping: 9,
+  maximumDampingDelta: 0.05,
   minimumY: -1.88,
   maximumY: 2.48,
   maximumAbsX: 3.68,

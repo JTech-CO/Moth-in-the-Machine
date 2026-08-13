@@ -19,11 +19,13 @@ import {
 } from '@/store/persistence';
 import { applyHealthDelta, isHealthDepleted } from '@/utils/health';
 import { calculateStars, type StarRating } from '@/utils/starCalculator';
+import { getStageDefinition } from '@/utils/stages';
 import type { Vec3 } from '@/utils/collision';
 
 export interface GameStoreState {
   readonly player: PlayerState;
   readonly currentStageId: number | null;
+  readonly stageRunId: number;
   readonly elapsedTimeMs: number;
   readonly status: SessionStatus;
   readonly stars: StarRating;
@@ -32,9 +34,10 @@ export interface GameStoreState {
   readonly settings: GameSettings;
   readonly persistenceStatus: PersistenceLoadStatus;
   startStage(stageId: number): void;
+  returnToMenu(): void;
   setPlayerSnapshot(position: Vec3, velocity: Vec3): void;
   setElapsedTimeMs(elapsedTimeMs: number): void;
-  updateHealth(delta: number): void;
+  updateHealth(delta: number): number;
   land(success: boolean): GameResult | null;
   updateSettings(patch: Partial<GameSettings>): void;
   saveProgress(): SaveProgressResult;
@@ -142,6 +145,7 @@ export function createGameStore(dependencies: GameStoreDependencies = {}): GameS
   return createStore<GameStoreState>()((set, get) => ({
     player: createDefaultPlayerState(),
     currentStageId: null,
+    stageRunId: 0,
     elapsedTimeMs: 0,
     status: 'idle',
     stars: 0,
@@ -152,12 +156,31 @@ export function createGameStore(dependencies: GameStoreDependencies = {}): GameS
 
     startStage: (stageId) => {
       assertPositiveSafeInteger(stageId, 'stage id');
+      const stage = getStageDefinition(stageId);
+
+      set((state) => ({
+        player: createDefaultPlayerState(stage.spawnPosition),
+        currentStageId: stageId,
+        stageRunId: state.stageRunId + 1,
+        elapsedTimeMs: 0,
+        status: 'playing',
+        stars: 0,
+        result: null,
+      }));
+    },
+
+    returnToMenu: () => {
+      const state = get();
+
+      if (state.status === 'idle' && state.currentStageId === null) {
+        return;
+      }
 
       set({
         player: createDefaultPlayerState(),
-        currentStageId: stageId,
+        currentStageId: null,
         elapsedTimeMs: 0,
-        status: 'playing',
+        status: 'idle',
         stars: 0,
         result: null,
       });
@@ -195,25 +218,27 @@ export function createGameStore(dependencies: GameStoreDependencies = {}): GameS
         throw new RangeError('health delta must be finite.');
       }
 
-      if (get().status !== 'playing') {
-        return;
+      const state = get();
+
+      if (state.status !== 'playing') {
+        return state.player.health;
       }
 
-      set((state) => {
-        const health = applyHealthDelta(state.player.health, delta);
-        const failed = isHealthDepleted(health);
+      const health = applyHealthDelta(state.player.health, delta);
+      const failed = isHealthDepleted(health);
 
-        return {
-          player: {
-            ...state.player,
-            health,
-            isLanded: failed ? false : state.player.isLanded,
-          },
-          status: failed ? 'failed' : state.status,
-          stars: failed ? 0 : state.stars,
-          result: failed ? null : state.result,
-        };
+      set({
+        player: {
+          ...state.player,
+          health,
+          isLanded: failed ? false : state.player.isLanded,
+        },
+        status: failed ? 'failed' : state.status,
+        stars: failed ? 0 : state.stars,
+        result: failed ? null : state.result,
       });
+
+      return health;
     },
 
     land: (success) => {
