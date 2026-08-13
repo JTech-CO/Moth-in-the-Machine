@@ -1,0 +1,26 @@
+.root {
+  min-width: 0;
+  padding: 0.58rem 0.72rem;
+  font-family: var(--font-typewriter);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+  text-align: right;
+}
+
+.root span,
+.root time {
+  display: block;
+}
+
+.root span {
+  color: var(--text-muted);
+  font-size: 0.54rem;
+}
+
+.root time {
+  margin-top: 0.24rem;
+  color: var(--text-cream);
+  font-size: clamp(0.85rem, 2vw, 1.08rem);
+  font-weight: 700;
+  white-space: nowrap;
+}

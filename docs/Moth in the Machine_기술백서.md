@@ -122,14 +122,32 @@ const useGameStore = create((set, get) => ({
 
 ### 5.1. 디자인 토큰 (Design Tokens)
 - **Colors**: `--bg-dark: #0a0e17`, `--accent-gold: #f0c14b`, `--health-green: #22c55e`, `--health-red: #ef4444`, `--spark: #fbbf24`
-- **Typography**: `'Pretendard', 'Inter', system-ui`, Base Size 16px
+- **Typography**: 제목은 `'Inter', system-ui, sans-serif`, 계기·메타 정보는 `'Courier Prime', monospace`, Base Size 16px. 두 폰트는 `@fontsource` 번들로 자체 호스팅
 - **Breakpoints**: Mobile(768px), Tablet(1024px), Desktop(1280px+)
 
 ### 5.2. 공통 컴포넌트 (Shared Components)
-- **Button**: Props – variant(`primary`|`secondary`|`ghost`), size(`sm`|`md`|`lg`), disabled. 호버 시 미세 스케일 + 글로우
-- **Modal**: React Portal 사용, z-index 1000, 배경 클릭으로 닫기 가능. 결과/일시정지/설정에 공용
-- **HealthBar**: width 퍼센트 기반, 색상 그라데이션 + 깎일 때 shake 애니메이션
-- **StarDisplay**: 1~3개 별 아이콘, 금/은/동 색상 분기
+- **Button**: variant(`primary`|`secondary`|`ghost`), size(`sm`|`md`|`lg`), disabled를 지원한다. 금속 베벨과 베이클라이트 눌림 상태, 키보드 focus-visible, forced-colors 상태를 보장
+- **Modal**: React Portal 사용, z-index 1000, `role="dialog"`·`aria-modal`·레이블/설명 연결. 초기 focus와 Tab/Shift+Tab focus trap, 닫힌 뒤 이전 focus 복귀를 제공하며 배경 클릭과 Escape 닫기를 지원
+- **HealthBar**: store health와 동기화한 10세그먼트 계기판. 숫자 HP와 semantic `<meter>`를 함께 제공하고, 피해 revision 때 바 shake를 표시하되 동작 축소 환경에서는 애니메이션을 제거
+- **StarDisplay**: 1~3개 별 아이콘, 금/은/동 색상 분기와 읽을 수 있는 레이블 제공. 플레이 중에는 현재 health 파생값, terminal에서는 store에 latch된 최종 별점을 표시
+
+### 5.3. HUD·일시정지 통합 (HUD & Pause Integration)
+- **Canvas 계층**: 인게임 HUD는 Drei `<Html fullscreen>` 안에 렌더한다. GameHud root와 DamageOverlay는 transformed outer wrapper 아래 fixed containing block에 의존하지 않고 Html 표면 기준 `position: absolute` full surface를 사용하며, Html anchor는 camera-forward 위치에서 world-origin의 behind-camera 숨김을 방지한다. HUD 루트는 `pointer-events: none`으로 비행 입력을 통과시키고, 일시정지 버튼과 Modal 같은 대화형 요소만 포인터 입력을 받는다.
+- **상단 계기**: 좌측 stage 식별자, 중앙 HealthBar, 우측 Timer를 배치한다. Timer는 store elapsed를 `MM:SS.t`로 표시하고 semantic `<time>` 값을 제공한다.
+- **Minimap**: 플레이어 x/z를 회랑 경계에 투영하고 목표까지의 선·방향을 표시한다. 목표의 floor·ceiling·left-wall·right-wall 표면과 플레이어 대비 ASCEND·DESCEND·LEVEL 고도 정보를 텍스트로 병행한다.
+- **DamageOverlay**: 직전 health보다 현재 health가 낮을 때만 피해량 기반 강도로 화면 가장자리 적색 pulse를 발생시킨다. `prefers-reduced-motion`에서는 pulse와 shake를 표시하지 않는다.
+- **Pause contract**: P·Escape, 문서 비가시화, 한 번 획득한 Canvas pointer lock의 상실은 `paused`로 전환해 물리·타이머·피해와 카메라 T 토글을 멈춘다. Continue는 play 상태와 pointer lock을 복원하고, Restart는 동일 stage를 초기화하며, Return은 stage 목록으로 돌아가 커서를 보이게 한다.
+- **결과 경계**: M6 clear/fail 중앙 안내와 Enter·R 동작은 M8 결과 화면이 구현될 때까지 유지하며, M7 PauseModal과 섞지 않는다.
+- **반응형·접근성**: 320px부터 768px 전환점을 포함해 가로 스크롤 없이 계기를 재배치한다. `showControlHints`, `forced-colors`, `prefers-reduced-motion`, 키보드 focus 순서를 모두 보존한다.
+
+### 5.4. M7 자동검증·Lighthouse 기준선 (Verification Baseline)
+- **정적 게이트**: ESLint 0 errors / 0 warnings, TypeScript, import boundary 통과
+- **회귀 계약**: 사용자 실플레이에서 발견한 0×0 HUD 붕괴·overflow clip을 수정하고 StageEnvironment.hud, HudVisibility, DamageOverlay 테스트를 추가
+- **테스트**: Vitest 25 files / 402 tests 통과
+- **V8 overall coverage**: statements 98.97%, branches 97.32%, functions 99.02%, lines 98.94%
+- **Production build**: Vite 111 modules, 초기 index 169.55 kB(55.54 kB gzip), lazy SceneCanvas 895.53 kB(244.14 kB gzip)
+- **Lighthouse**: 13.4.1 메뉴 화면 accessibility 100, binary failure 0. 메뉴 DOM만 감사했으므로 인게임 HUD 실제 가시성의 증거로 사용하지 않는다.
+- **상태**: 기존 500 kB 초과 warning만 유지한다. 2026-08-14 사용자 재수동 실플레이에서 stage·health·timer·minimap UI와 피격 오버레이가 정상 표시되고 0×0 HUD 회귀 수정이 유효함을 확인해 M7 완료·커밋·푸시 승인을 확정했다. 메뉴 Lighthouse 결과는 인게임 가시성 증거와 계속 분리한다.
 
 ## 6. 파일 구조 (File Structure)
 
@@ -139,8 +157,8 @@ moth-in-the-machine/
 │   ├── api/                # (향후 리더보드용 빈 폴더)
 │   ├── assets/             # 모델(gltf), 텍스처, 사운드, 폰트
 │   ├── components/
-│   │   ├── common/         # Button, Modal, HealthBar, StarDisplay
-│   │   ├── hud/            # Timer, Minimap, DamageOverlay
+│   │   ├── ui/             # Button, Modal, HealthBar, StarDisplay
+│   │   ├── hud/            # GameHud, Timer, Minimap, PauseModal, DamageOverlay
 │   │   ├── layout/         # TitleScreen, StageSelect, ResultScreen
 │   │   └── three/          # Moth, Obstacles, StageEnvironment, CameraRig
 │   ├── hooks/              # useKeyboard, useGameLoop, useShareImage

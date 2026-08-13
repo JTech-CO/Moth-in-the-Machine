@@ -1,0 +1,26 @@
+.actions {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.lockHint {
+  margin: 0 0 0.85rem;
+  border-left: 2px solid var(--accent-amber);
+  padding: 0.55rem 0.7rem;
+  color: var(--text-cream);
+  font-family: var(--font-typewriter);
+  font-size: 0.65rem;
+  line-height: 1.45;
+  letter-spacing: 0.05em;
+  background: rgba(240, 193, 75, 0.08);
+}
+
+.shortcut {
+  display: block;
+  margin-top: 0.85rem;
+  color: var(--text-muted);
+  font-family: var(--font-typewriter);
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+}

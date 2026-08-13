@@ -34,6 +34,8 @@ export interface GameStoreState {
   readonly settings: GameSettings;
   readonly persistenceStatus: PersistenceLoadStatus;
   startStage(stageId: number): void;
+  pauseStage(): void;
+  resumeStage(): void;
   returnToMenu(): void;
   setPlayerSnapshot(position: Vec3, velocity: Vec3): void;
   setElapsedTimeMs(elapsedTimeMs: number): void;
@@ -167,6 +169,22 @@ export function createGameStore(dependencies: GameStoreDependencies = {}): GameS
         stars: 0,
         result: null,
       }));
+    },
+
+    pauseStage: () => {
+      if (get().status !== 'playing') {
+        return;
+      }
+
+      set({ status: 'paused' });
+    },
+
+    resumeStage: () => {
+      if (get().status !== 'paused') {
+        return;
+      }
+
+      set({ status: 'playing' });
     },
 
     returnToMenu: () => {

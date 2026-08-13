@@ -77,6 +77,118 @@ describe('createGameStore', () => {
       result: null,
     });
   });
+  it('pauses and resumes only an active run while preserving transient state', () => {
+    const store = createGameStore();
+
+    store.getState().startStage(2);
+    store.getState().setPlayerSnapshot({ x: 1, y: -0.5, z: -4 }, { x: 0.5, y: -0.25, z: -1 });
+    store.getState().setElapsedTimeMs(4321);
+    store.getState().updateHealth(-25);
+
+    const beforePause = store.getState();
+    store.getState().pauseStage();
+    const paused = store.getState();
+
+    expect(paused).toMatchObject({
+      currentStageId: 2,
+      stageRunId: 1,
+      elapsedTimeMs: 4321,
+      status: 'paused',
+      stars: 0,
+      result: null,
+    });
+    expect(paused.player).toBe(beforePause.player);
+    expect(paused.progress).toBe(beforePause.progress);
+    expect(paused.settings).toBe(beforePause.settings);
+
+    store.getState().pauseStage();
+    expect(store.getState()).toBe(paused);
+
+    store.getState().resumeStage();
+    const resumed = store.getState();
+
+    expect(resumed).toMatchObject({
+      currentStageId: 2,
+      stageRunId: 1,
+      elapsedTimeMs: 4321,
+      status: 'playing',
+      stars: 0,
+      result: null,
+    });
+    expect(resumed.player).toBe(paused.player);
+    expect(resumed.progress).toBe(paused.progress);
+    expect(resumed.settings).toBe(paused.settings);
+
+    store.getState().resumeStage();
+    expect(store.getState()).toBe(resumed);
+  });
+
+  it('keeps pause and resume identity-safe outside their guarded transitions', () => {
+    const store = createGameStore({ now: fixedClock });
+    const idle = store.getState();
+
+    store.getState().pauseStage();
+    store.getState().resumeStage();
+    expect(store.getState()).toBe(idle);
+
+    store.getState().startStage(1);
+    store.getState().land(true);
+    const cleared = store.getState();
+
+    store.getState().pauseStage();
+    store.getState().resumeStage();
+    expect(store.getState()).toBe(cleared);
+  });
+
+  it('ignores late player, timer, health, and landing mutations while paused', () => {
+    const store = createGameStore();
+
+    store.getState().startStage(1);
+    store.getState().setElapsedTimeMs(1947);
+    store.getState().updateHealth(-20);
+    store.getState().pauseStage();
+    const paused = store.getState();
+
+    store.getState().setPlayerSnapshot({ x: 3, y: 2, z: 1 }, { x: -3, y: -2, z: -1 });
+    store.getState().setElapsedTimeMs(9999);
+    expect(store.getState().updateHealth(-60)).toBe(80);
+    expect(store.getState().land(true)).toBeNull();
+
+    expect(store.getState()).toBe(paused);
+  });
+
+  it('fully resets a paused run when restarting or returning to the menu', () => {
+    const store = createGameStore();
+
+    store.getState().startStage(1);
+    store.getState().setElapsedTimeMs(2500);
+    store.getState().updateHealth(-40);
+    store.getState().pauseStage();
+    store.getState().startStage(2);
+
+    expect(store.getState()).toMatchObject({
+      player: createDefaultPlayerState(getStageDefinition(2).spawnPosition),
+      currentStageId: 2,
+      stageRunId: 2,
+      elapsedTimeMs: 0,
+      status: 'playing',
+      stars: 0,
+      result: null,
+    });
+
+    store.getState().pauseStage();
+    store.getState().returnToMenu();
+
+    expect(store.getState()).toMatchObject({
+      player: createDefaultPlayerState(),
+      currentStageId: null,
+      stageRunId: 2,
+      elapsedTimeMs: 0,
+      status: 'idle',
+      stars: 0,
+      result: null,
+    });
+  });
   it('returns to the campaign menu without discarding durable progress or settings', () => {
     const store = createGameStore({ now: fixedClock });
 

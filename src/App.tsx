@@ -18,7 +18,7 @@ import {
   normalizeCompletedStageIds,
   type CampaignDifficulty,
 } from '@/utils/campaignProgression';
-import { getStageDefinition, isStageId, TOTAL_STAGE_COUNT } from '@/utils/stages';
+import { getStageDefinition, TOTAL_STAGE_COUNT } from '@/utils/stages';
 
 const SceneCanvas = lazy(() => import('@/components/three/SceneCanvas'));
 
@@ -70,7 +70,7 @@ class SceneErrorBoundary extends Component<SceneErrorBoundaryProps, SceneErrorBo
   }
 
   componentDidCatch(error: unknown, errorInfo: ErrorInfo): void {
-    console.error('The M6 stage scene failed to render.', error, errorInfo.componentStack);
+    console.error('The M7 stage scene failed to render.', error, errorInfo.componentStack);
     this.props.onError();
   }
 
@@ -112,10 +112,7 @@ function formatBestTime(bestTimeMs: number): string {
 function App() {
   const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading');
   const [selectedDifficulty, setSelectedDifficulty] = useState<CampaignDifficulty | null>(null);
-  const currentStageId = useGameStore((state) => state.currentStageId);
-  const health = useGameStore((state) => state.player.health);
   const gameStatus = useGameStore((state) => state.status);
-  const stars = useGameStore((state) => state.stars);
   const progress = useGameStore((state) => state.progress);
   const startStage = useGameStore((state) => state.startStage);
   const markSceneUnavailable = useCallback(() => setSceneStatus('unavailable'), []);
@@ -126,19 +123,7 @@ function App() {
     ...normalizeCompletedStageIds(progress.completedStages.map((stage) => stage.stageId)),
   ];
   const unlocks = getDifficultyUnlocks(completedStageIds);
-  const activeStage =
-    currentStageId !== null && isStageId(currentStageId)
-      ? getStageDefinition(currentStageId)
-      : null;
-  const campaignSection =
-    activeStage === null
-      ? 'CAMPAIGN'
-      : activeStage.difficulty === 'tutorial'
-        ? 'TUTORIAL'
-        : activeStage.difficulty.toUpperCase() +
-          ' ' +
-          String(activeStage.stageNumberWithinDifficulty).padStart(2, '0') +
-          ' / 06';
+
   const launchStage = useCallback(
     (stageId: number) => {
       if (sceneStatus === 'ready' && gameStatus === 'idle') {
@@ -147,18 +132,7 @@ function App() {
     },
     [gameStatus, sceneStatus, startStage],
   );
-  const statusReadout =
-    gameStatus === 'cleared' ? 'CLEARED · ' + stars + ' STAR' : gameStatus.toUpperCase();
-  const environmentChecks = [
-    [
-      'STAGE',
-      currentStageId === null
-        ? '-- / ' + TOTAL_STAGE_COUNT
-        : String(currentStageId).padStart(2, '0') + ' / ' + TOTAL_STAGE_COUNT,
-    ],
-    ['HEALTH', Math.ceil(health) + ' HP'],
-    ['STATUS', statusReadout],
-  ] as const;
+
   const menuStatus =
     sceneStatus === 'unavailable'
       ? 'FLIGHT SYSTEMS OFFLINE'
@@ -176,19 +150,17 @@ function App() {
 
       <div className={styles.vignette} aria-hidden="true" />
 
-      <section
-        className={[styles.readout, showMenu ? styles.campaignReadout : '']
-          .filter(Boolean)
-          .join(' ')}
-        aria-labelledby="project-title"
-      >
-        <p className={styles.eyebrow}>HARVARD COMPUTATION LABORATORY · MARK II · 1947</p>
-        <h1 id="project-title" className={styles.title}>
-          Moth <span>in the</span> Machine
-        </h1>
+      {showMenu ? (
+        <section
+          className={[styles.readout, styles.campaignReadout].join(' ')}
+          aria-labelledby="project-title"
+        >
+          <p className={styles.eyebrow}>HARVARD COMPUTATION LABORATORY · MARK II · 1947</p>
+          <h1 id="project-title" className={styles.title}>
+            Moth <span>in the</span> Machine
+          </h1>
 
-        {showMenu ? (
-          selectedDifficulty === null ? (
+          {selectedDifficulty === null ? (
             <>
               <p className={styles.introStory}>
                 1947년 하버드 Mark II의 릴레이 회랑. 실제 기록에 남은 ‘나방 버그’가 되어 난이도와
@@ -249,7 +221,7 @@ function App() {
                       ].join(' ')}
                       type="button"
                       disabled={!unlock.unlocked}
-                      aria-label={`${copy.label} 난이도, ${unlock.unlocked ? '플레이 가능' : lockedCondition}`}
+
                       onClick={() => setSelectedDifficulty(difficulty)}
                     >
                       <span className={styles.cardStatus}>
@@ -350,38 +322,9 @@ function App() {
                 })}
               </div>
             </>
-          )
-        ) : (
-          <>
-            <p className={styles.summary}>
-              {sceneReady
-                ? campaignSection +
-                  ' · 목표 접점에 정확히 착지하세요. R은 재시작, 종료 후 Enter는 단계 선택입니다.'
-                : '비행 시스템을 동기화하고 있습니다. 3D 렌더러가 준비되는 중입니다.'}
-            </p>
-
-            <dl className={styles.systems}>
-              {environmentChecks.map(([label, value]) => (
-                <div key={label}>
-                  <dt>{label}</dt>
-                  <dd>{sceneReady ? value : 'SYNCING'}</dd>
-                  {label === 'HEALTH' ? (
-                    <meter
-                      className={styles.healthMeter}
-                      min={0}
-                      max={100}
-                      value={health}
-                      aria-label="Moth health"
-                    >
-                      {health}
-                    </meter>
-                  ) : null}
-                </div>
-              ))}
-            </dl>
-          </>
-        )}
-      </section>
+          )}
+        </section>
+      ) : null}
       {showResultPrompt ? (
         <aside
           className={[
@@ -402,23 +345,14 @@ function App() {
         </aside>
       ) : null}
 
-      <footer className={styles.footer}>
-        <span>
-          {showMenu
-            ? 'NO INSTALL · 19 STAGES · TUTORIAL + EASY / NORMAL / HARD'
-            : 'CLICK · WASD / ARROWS + MOUSE · SPACE MODE · T VIEW · R RETRY · ENTER MENU'}
-        </span>
-        {showMenu ? (
+      {showMenu ? (
+        <footer className={styles.footer}>
+          <span>NO INSTALL · 19 STAGES · TUTORIAL + EASY / NORMAL / HARD</span>
           <span className={sceneReady ? styles.ready : styles.pending} role="status">
             <span aria-hidden="true">●</span> {menuStatus}
           </span>
-        ) : (
-          <span className={sceneReady ? styles.ready : styles.pending}>
-            <span aria-hidden="true">●</span>{' '}
-            {sceneReady ? 'M6 · STAGE SYSTEMS ONLINE' : 'STAGE SYSTEMS SYNCING'}
-          </span>
-        )}
-      </footer>
+        </footer>
+      ) : null}
     </main>
   );
 }

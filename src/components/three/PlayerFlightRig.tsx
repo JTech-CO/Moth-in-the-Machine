@@ -263,7 +263,11 @@ export function PlayerFlightRig({ stage, status }: PlayerFlightRigProps) {
   return (
     <>
       <MothPlayer ref={playerRoot} motion={motion} />
-      <CameraRig playerState={playerState} lookAngles={resolvedLookAngles} />
+      <CameraRig
+        inputEnabled={status === 'playing'}
+        playerState={playerState}
+        lookAngles={resolvedLookAngles}
+      />
     </>
   );
 }

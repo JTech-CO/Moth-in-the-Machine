@@ -35,7 +35,7 @@
 ### 2.2. 사용자 상호작용 (Interaction Logic)
 - **주요 액션 (Actions)**:
   - **Hover Effects**: 금속 패널 위 버튼/스위치에 미세한 반사 증가 + 베이클라이트 광택 강화
-  - **Navigation**: 타이틀/메인 → 난이도 선택 → 해당 난이도의 개별 단계 선택 → 인게임 → 중앙 결과 안내 → 선택한 난이도의 개별 단계 선택 복귀의 계층 흐름. clear/fail 진입 즉시 포인터 잠금을 해제하고 커서를 복원한다. 결과 상태의 Enter는 보존된 난이도의 단계 목록으로 돌아가며, R은 현재 단계를 재시작하고 다음 단계로 자동 이동하지 않는다. 일시정지는 중앙 모달
+  - **Navigation**: 타이틀/메인 → 난이도 선택 → 해당 난이도의 개별 단계 선택 → 인게임 → 중앙 결과 안내 → 선택한 난이도의 개별 단계 선택 복귀의 계층 흐름. clear/fail 진입 즉시 포인터 잠금을 해제하고 커서를 복원한다. 결과 상태의 Enter는 보존된 난이도의 단계 목록으로 돌아가며, R은 현재 단계를 재시작하고 다음 단계로 자동 이동하지 않는다. P·Escape, 문서 비가시화, 획득 후 포인터 잠금 상실은 중앙 일시정지 모달을 열고, Continue·Restart·Return 동작을 제공한다.
 - **입력 방식 (Input)**: Keyboard/Mouse 우선, 터치 시 가상 조이스틱 + 드래그 카메라. 카메라는 기본 3인칭이며 T로 1인칭·3인칭을 전환. 모든 버튼은 물리적 눌림 피드백 제공
 - **캠페인 구성 (Campaign)**: 조작 튜토리얼 1개 + EASY·NORMAL·HARD 각 6개, 총 19단계. 난이도를 선택한 뒤 그 안의 개별 단계를 플레이하며, 전역 1→19 강제 순차 진행은 사용하지 않는다. relay-bay는 튜토리얼·EASY, switching-gallery는 NORMAL, logic-labyrinth는 HARD의 고유 공간 언어로 사용
 - **메뉴 배경 회랑 (Menu Corridor)**: 실행 중인 stage가 있으면 그 stage의 environment를 최우선으로 유지한다. active run이 없을 때 선택값 null·TUTORIAL·EASY는 relay-bay, NORMAL은 switching-gallery, HARD는 logic-labyrinth를 배경으로 표시한다.
@@ -45,8 +45,8 @@
 - **어두운 회랑 가시성 (Dark Corridor Visibility)**: NORMAL·HARD의 분위기는 어둡게 유지하되, 경로·장애물 윤곽·목표 접근면이 사라지는 완전 암부는 허용하지 않는다. 크림·호박색의 은은한 분산 보조 조명을 사용하고 그림자는 생성하지 않아 기존 성능 예산을 유지한다.
 
 ### 2.3. 데이터 구조 및 모듈 (Component Structure)
-1.  **헤더 (Header)**: 상단 고정 바 – 좌측 스테이지명, 중앙 체력 바, 우측 타이머
-2.  **네비게이션 (Nav)**: 메인에서는 난이도 카드와 개별 단계 카드를 계층적으로 표시하고 잠금·완료·최고 기록을 구분한다. 단계 카드는 연번·제목 / 목표 / 별·BEST 기록 / START FLIGHT를 4단 grid로 구성해 넓은 카드에서도 정보가 흩어지지 않게 한다. 카드 전체를 하나의 버튼으로 유지하고 가시적 focus와 단계명·목표·완료 기록·시작 의도를 포함한 `aria-label`을 제공한다. 인게임에서는 미니맵 + 목표 화살표만 표시하며 일시정지는 중앙 모달로 처리
+1.  **헤더 (Header)**: 상단 고정 바 – 좌측 스테이지명, 중앙 10세그먼트 체력 바, 우측 타이머. 체력은 숫자 HP와 semantic meter를 병행하고 시간은 `MM:SS.t` 계기 형식으로 표시
+2.  **네비게이션 (Nav)**: 메인에서는 난이도 카드와 개별 단계 카드를 계층적으로 표시하고 잠금·완료·최고 기록을 구분한다. 단계 카드는 연번·제목 / 목표 / 별·BEST 기록 / START FLIGHT를 4단 grid로 구성해 넓은 카드에서도 정보가 흩어지지 않게 한다. 카드 전체를 하나의 버튼으로 유지하고 가시적 focus와 단계명·목표·완료 기록·시작 의도를 포함한 `aria-label`을 제공한다. 인게임 미니맵은 플레이어와 목표 방향, 목표 표면, ASCEND·DESCEND·LEVEL 고도를 함께 표시하며 일시정지는 중앙 모달로 처리한다.
 3.  **콘텐츠 영역 (Content)**: 전체 화면 3D 뷰포트. HUD는 반투명 금속 패널 스타일 오버레이
 4.  **푸터 (Footer)**: 인게임에서는 컨트롤 힌트만 하단 표시 (설정에서 숨김 가능). 결과 화면에서는 공유 버튼 영역
 
@@ -93,15 +93,25 @@
 ### 4.2. 반응형 로직 (Responsive Logic)
 1.  **Desktop (Default)**: 전체 화면 3D + 고정 HUD 오버레이
 2.  **Transition Point**: 1024px (태블릿), 768px (모바일)
-3.  **Mobile View**: 가상 조이스틱 하단 배치, HUD 요소 크기 축소, 미니맵 우측 상단 고정
+3.  **Mobile View**: 320–768px에서 HUD 요소를 재배치·축소하고 미니맵을 우측에 유지하며, 조작 힌트와 계기판이 겹치거나 가로 스크롤을 만들지 않게 한다. 가상 조이스틱은 후속 터치 입력 범위로 남긴다.
 
 ### 4.3. 핵심 컴포넌트 로직 (Core Components)
-- **HealthBar**: 진공관 밝기 또는 세그먼트 인디케이터 스타일. 깎일 때 화면 가장자리 붉은 오버레이 + 바 흔들림
+- **HealthBar**: 10개 진공관 세그먼트 인디케이터 스타일. 숫자 HP와 semantic meter를 병행하고 깎일 때 화면 가장자리 붉은 오버레이 + 바 흔들림을 표시
+- **Timer**: Courier Prime 계기 숫자로 `MM:SS.t`를 표시하며 스크린 리더가 읽을 수 있는 시간 값을 병행
+- **Minimap**: 회랑 x/z 경계에 플레이어와 목표를 투영하고 연결선·표면 배지·고도 지시를 함께 표시해 색상이나 방향선 하나에만 의존하지 않음
+- **StarDisplay**: 플레이 중에는 현재 HP로 예상 별점을 갱신하고 clear/fail 뒤에는 latch된 최종 별점을 표시. 금·은·동 색과 읽을 수 있는 레이블을 병행
+- **DamageOverlay**: health 감소에만 반응하는 가장자리 적색 pulse. 피해량에 따라 강도를 조절하고 동작 축소 환경에서는 pulse와 shake를 제거
+- **PauseModal**: Portal 기반 중앙 금속 패널. Continue·Restart·Return을 순서대로 배치하고 초기 focus, Tab/Shift+Tab 순환, 닫힌 뒤 이전 focus 복귀를 보장
 - **ResultCard / ShareImage**: 1947년 실제 로그북 페이지를 재현. 크림 종이 배경 + 타이프라이터 폰트 + 테이프에 붙은 나방 일러스트 + 별·시간·체력 정보
 - **ControlPanelButton**: 베이클라이트 원형 버튼 + 금속 베벨. 클릭 시 눌림 애니메이션과 기계음 피드백
 - **TerminalNotice (M6)**: clear/fail 상태와 Enter 단계 목록 복귀·R 재시작을 뷰포트 중앙에 고대비로 안내. 정식 결과 모달·공유 기능은 M8 범위
 - **Moth Model**: 앞·뒷날개, 더듬이, 다리와 몸통의 실루엣을 분명히 하여 파리와 혼동되지 않는 primitive 나방으로 표현
 - **Obstacle Model**: 전선·스파크·과열 릴레이·진공관의 기능과 충돌 범위를 색·형태·발광 구조로 구분하며, 회랑 구조와 분리되어 떠 보이지 않게 결합
+
+- **M7 HUD 가시성 회귀**: 사용자 실플레이에서 Drei Html의 transformed 0×0 wrapper 아래 fixed GameHud·DamageOverlay가 붕괴·clip되는 문제를 발견했다. 두 표면을 `position: absolute` full surface로 바꾸고 Html을 camera-forward에 anchor해 world-origin behind-camera 숨김도 방지했다.
+- **M7 자동 QA 기준선**: StageEnvironment.hud·HudVisibility·DamageOverlay 회귀 계약을 포함한 25개 테스트 파일·402개 테스트를 통과했다. V8 overall coverage는 statements 98.97%, branches 97.32%, functions 99.02%, lines 98.94%이며 build는 111 modules, index 169.55 kB(55.54 kB gzip), SceneCanvas 895.53 kB(244.14 kB gzip)이다.
+- **M7 Lighthouse QA**: 메뉴 화면 accessibility 100, binary failure 0은 메뉴 DOM에만 해당하며 인게임 HUD 실제 가시성의 증거가 아니다.
+- **M7 게이트 상태**: 2026-08-14 사용자 재수동 실플레이에서 stage·health·timer·minimap UI와 피격 오버레이가 정상 표시됨을 확인했다. 0×0 HUD 회귀 수정 뒤 시각 게이트를 통과해 M7을 완료하고 커밋·푸시를 승인했다. 메뉴 Lighthouse 결과는 인게임 가시성 증거와 분리해 유지한다.
 
 ## 5. UI/UX 디자인 가이드 (Design System)
 
@@ -130,7 +140,7 @@ src/
 ├── components/
 │   ├── layout/                 # TitleScreen, StageSelect, ResultScreen
 │   ├── ui/                     # Button, HealthBar, StarDisplay, Modal
-│   └── features/               # HUD, Minimap, ShareCanvas, DamageOverlay
+│   └── hud/                    # GameHud, Timer, Minimap, PauseModal, DamageOverlay
 └── [설정 파일 - tailwind.config.js, postcss.config.js]
 ```
 
@@ -144,6 +154,8 @@ src/
     - 단계 카드는 중첩 버튼 없이 카드 전체를 하나의 버튼으로 제공하고, 별점은 보이는 기호와 읽을 수 있는 레이블을 함께 사용한다. 제목·기록은 좁은 화면에서 wrap하되 가로 스크롤을 만들지 않는다.
     - 체력 바·타이머는 색상만으로 정보를 전달하지 않고 텍스트·아이콘 병행.
     - 고대비 모드에서도 호박색 강조가 유지되도록 대비 검증.
+    - 비대화형 HUD는 Canvas 비행 입력을 통과시키고 버튼·모달만 pointer-events를 받는다. 일시정지 모달은 focus trap과 이전 focus 복귀를 제공한다.
+    - `prefers-reduced-motion`에서는 피해 pulse·바 shake·버튼 transform을 제거하고, `forced-colors`에서도 경계·focus·상태가 구분되게 한다.
 3.  **예외 처리 (Exception Handling)**:
     - 3D 로딩 실패 시 로그북 스타일 Skeleton UI 노출.
     - 공유 이미지 생성 실패 시 “텍스트만 복사” 폴백 제공.

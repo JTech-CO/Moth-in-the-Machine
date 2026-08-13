@@ -2,7 +2,7 @@ import type { StarRating } from '@/utils/starCalculator';
 import type { Vec3 } from '@/utils/collision';
 
 export type CompletedStarRating = Exclude<StarRating, 0>;
-export type SessionStatus = 'idle' | 'playing' | 'cleared' | 'failed';
+export type SessionStatus = 'idle' | 'playing' | 'paused' | 'cleared' | 'failed';
 
 export interface PlayerState {
   readonly health: number;

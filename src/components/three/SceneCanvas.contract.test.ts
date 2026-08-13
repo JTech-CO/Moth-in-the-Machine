@@ -49,10 +49,7 @@ const captured = vi.hoisted(() => ({
   canvas: null as CanvasContract | null,
   stageEnvironment: null as StageEnvironmentContract | null,
   gameState: {
-    currentStageId: null as number | null,
-    player: { health: 100 },
     status: 'idle',
-    stars: 0,
     progress: {
       completedStages: [] as { stageId: number; bestTimeMs: number; bestStars: number }[],
       totalStars: 0,
@@ -79,7 +76,7 @@ vi.mock('@/hooks/useGameStore', () => ({
   useGameStore: (selector: (state: typeof captured.gameState) => unknown) =>
     selector(captured.gameState),
 }));
-describe('M6 scene canvas contract', () => {
+describe('M7 scene canvas contract', () => {
   beforeEach(() => {
     captured.canvas = null;
     captured.stageEnvironment = null;
@@ -137,10 +134,8 @@ describe('M6 scene canvas contract', () => {
     ['failed', 'FLIGHT FAILED', '메인 · 단계 선택 화면으로 복귀'],
   ] as const)('shows an explicit Enter prompt after a %s run', (status, heading, action) => {
     const originalStatus = captured.gameState.status;
-    const originalStageId = captured.gameState.currentStageId;
 
     captured.gameState.status = status;
-    captured.gameState.currentStageId = 2;
 
     try {
       const markup = renderToString(createElement(App));
@@ -152,7 +147,6 @@ describe('M6 scene canvas contract', () => {
       expect(markup).toContain('R · 현재 단계 다시 시작');
     } finally {
       captured.gameState.status = originalStatus;
-      captured.gameState.currentStageId = originalStageId;
     }
   });
 
@@ -168,7 +162,8 @@ describe('M6 scene canvas contract', () => {
 
     expect(canvas).not.toBeNull();
     expect(markup).toContain('Harvard Mark II relay bay moth flight');
-    expect(canvas?.['data-render-surface']).toBe('m5-player-flight');
+    expect(markup).toContain('P 또는 Escape');
+    expect(canvas?.['data-render-surface']).toBe('m7-instrument-flight');
     expect(canvas?.camera).toEqual({
       position: [...CAMERA_CONFIG.position],
       fov: CAMERA_CONFIG.fov,

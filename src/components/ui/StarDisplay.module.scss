@@ -1,0 +1,36 @@
+.root {
+  display: inline-flex;
+  gap: 0.12em;
+  font-family: var(--font-typewriter);
+  font-size: 0.92rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 8px currentColor;
+}
+
+.empty {
+  color: rgba(168, 164, 154, 0.5);
+  text-shadow: none;
+}
+
+.unrated .filled,
+.bronze .filled {
+  color: #c47b48;
+}
+
+.silver .filled {
+  color: #c9d0d2;
+}
+
+.gold .filled {
+  color: var(--accent-amber);
+}
+
+@media (forced-colors: active) {
+  .root,
+  .empty,
+  .filled {
+    color: CanvasText;
+    text-shadow: none;
+  }
+}

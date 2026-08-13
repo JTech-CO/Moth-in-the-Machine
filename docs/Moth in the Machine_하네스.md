@@ -102,14 +102,25 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 
 ### M7 — HUD & UI 컴포넌트
 - 진입조건: M6 게이트 통과.
-- 할 일: HealthBar, Timer, Minimap, StarDisplay, DamageOverlay, 일시정지 모달, 스테이지 선택 화면 구현 → 디자인 토큰 적용.
+- 할 일: HealthBar, Timer, Minimap, StarDisplay, DamageOverlay, 일시정지 모달, 스테이지 선택 화면 구현 → Drei `<Html fullscreen>` HUD 계층과 디자인 토큰 적용.
 - 참조: 디자인 백서 §2, §5 / 기술 백서 §5
 - DoD:
   1. 모든 UI가 1947년 디자인 토큰(색상·폰트·베이클라이트/금속 질감)을 준수.
-  2. 체력 변화 시 바가 실시간 반영되고, 데미지 시 화면 가장자리 붉은 오버레이 동작.
-  3. 가로 스크롤 없음 + 기본 키보드 접근성(Tab 포커스) 통과.
-- 검증: 브라우저에서 수동 시연 + Lighthouse 접근성 점수 확인 + 디자인 백서 색상 대조.
-- 주의: 3D 위 Html 오버레이는 drei의 `<Html>` 사용.
+  2. store health 변화가 숫자 HP·semantic meter·10개 세그먼트에 실시간 반영되고, health 감소에만 화면 가장자리 붉은 오버레이와 바 shake가 동작한다.
+  3. 좌측 stage·중앙 health·우측 timer 헤더, live/terminal 별점, 플레이어→목표 방향·표면·고도를 나타내는 미니맵이 단일 store 값과 일치한다.
+  4. P·Escape·문서 비가시화·획득 후 pointer lock 상실이 물리·타이머·피해를 함께 일시정지한다. Continue·Restart·Return이 각각 포인터 잠금/재개·동일 stage 초기화·stage 목록/커서 복귀 계약을 지킨다.
+  5. Modal이 Portal·dialog semantics·초기 focus·Tab/Shift+Tab focus trap·focus 복귀를 제공하고, 비대화형 HUD는 Canvas 입력을 차단하지 않는다.
+  6. 320px·768px·desktop에서 가로 스크롤 없음, 키보드 focus-visible, `showControlHints`, `prefers-reduced-motion`, `forced-colors` 계약을 통과한다.
+  7. GameHud root와 DamageOverlay는 Drei Html의 transformed outer wrapper가 만든 0×0 containing block에 의존하지 않고 `position: absolute` full surface를 유지하며, Html anchor는 camera-forward 위치에서 behind-camera 숨김을 방지한다.
+  8. M6 clear/fail 중앙 결과 안내와 Enter 단계 목록 복귀·R 재시작은 M8 전까지 유지된다.
+- 검증: 단위/계약 테스트 + 브라우저에서 체력·데미지·타이머·미니맵·별점·일시정지/재개를 수동 시연 + 320/768/desktop 리사이즈·포인터 잠금·focus 순서 확인 + Lighthouse 접근성 점수 확인 + 디자인 백서 색상 대조.
+- 주의: 3D 위 Html 오버레이는 drei의 `<Html>` 사용. 자동검증·메뉴 Lighthouse와 별도로 수동 브라우저 실플레이에서 인게임 HUD 가시성을 확인해야 완료 처리한다.
+- 회귀 수정(2026-08-13): 사용자 실플레이에서 transformed 0×0 Html wrapper 아래 fixed HUD가 붕괴·clip되는 문제를 확인해 absolute full surface와 camera-forward anchor로 수정했다.
+- 자동검증 결과(2026-08-13): lint·TypeScript·import boundary, Vitest 25 files / 402 tests 통과. StageEnvironment.hud·HudVisibility·DamageOverlay 계약 포함. V8 overall coverage statements 98.97% / branches 97.32% / functions 99.02% / lines 98.94%.
+- production build 결과: Vite 111 modules, 초기 index 169.55 kB(55.54 kB gzip), lazy SceneCanvas 895.53 kB(244.14 kB gzip). 기존 500 kB 초과 warning만 유지.
+- Lighthouse 결과(2026-08-13): 13.4.1 메뉴 화면 accessibility 100, binary failure 0. 메뉴 감사이므로 인게임 HUD 실제 가시성의 증거가 아니다.
+- 수동 재검수 결과(2026-08-14): 실제 플레이에서 stage·health·timer·minimap UI와 피격 오버레이 정상 표시, 0×0 HUD 회귀 수정 유효성 확인.
+- 현재 진행 메모(2026-08-14): M7 DoD 완료. 사용자가 커밋·푸시를 승인했다.
 
 ### M8 — 결과 화면 & 공유 이미지 ★
 - 진입조건: M7 게이트 통과.

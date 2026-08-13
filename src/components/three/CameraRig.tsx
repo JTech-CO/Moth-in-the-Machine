@@ -16,13 +16,14 @@ import type { PlayerSimulationState } from '@/utils/playerPhysics';
 interface CameraRigProps {
   readonly lookAngles: MutableRefObject<LookAngles>;
   readonly playerState: MutableRefObject<PlayerSimulationState>;
+  readonly inputEnabled: boolean;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.max(minimum, Math.min(maximum, value));
 }
 
-export function CameraRig({ lookAngles, playerState }: CameraRigProps) {
+export function CameraRig({ inputEnabled, lookAngles, playerState }: CameraRigProps) {
   const desiredPosition = useRef(new Vector3(...CAMERA_CONFIG.position));
   const desiredTarget = useRef(new Vector3(...CAMERA_CONFIG.target));
   const activeTarget = useRef(new Vector3(...CAMERA_CONFIG.target));
@@ -30,8 +31,12 @@ export function CameraRig({ lookAngles, playerState }: CameraRigProps) {
   const activeCameraView = useRef<CameraViewMode>('third-person');
 
   useEffect(() => {
+    if (!inputEnabled) {
+      cameraViewInput.current = updateCameraViewInput(cameraViewInput.current, { type: 'blur' });
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== CAMERA_VIEW_TOGGLE_CODE) {
+      if (!inputEnabled || event.code !== CAMERA_VIEW_TOGGLE_CODE) {
         return;
       }
 
@@ -48,7 +53,7 @@ export function CameraRig({ lookAngles, playerState }: CameraRigProps) {
       }
     };
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.code !== CAMERA_VIEW_TOGGLE_CODE) {
+      if (!inputEnabled || event.code !== CAMERA_VIEW_TOGGLE_CODE) {
         return;
       }
 
@@ -71,7 +76,7 @@ export function CameraRig({ lookAngles, playerState }: CameraRigProps) {
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('blur', handleBlur);
     };
-  }, []);
+  }, [inputEnabled]);
 
   useFrame(({ camera, size }, delta) => {
     const { position } = playerState.current;

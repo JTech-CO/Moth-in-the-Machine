@@ -2,7 +2,7 @@
 
 ## 현재 phase
 
-M6 — 난이도 선택형 19단계 캠페인·다중 표면 착지 확장 (완료)
+M7 — HUD & UI 컴포넌트 (완료, 사용자 재수동검수 통과 및 커밋·푸시 승인)
 
 ## 직전에 끝낸 것
 
@@ -53,11 +53,21 @@ M6 — 난이도 선택형 19단계 캠페인·다중 표면 착지 확장 (완�
 - 메뉴 회랑은 active run을 최우선으로 표시하고, 비실행 상태에서 null·TUTORIAL·EASY는 relay-bay, NORMAL은 switching-gallery, HARD는 logic-labyrinth로 선택
 - 난이도·개별 단계 선택, 진행도 기반 해금, 선택 난이도 단계 목록 복귀, NORMAL/HARD 무그림자 분산 보조 조명, 결과 안내·포인터 해제·T 시점 전환을 포함한 313개 테스트와 production build 통과
 - 사용자 최종 브라우저 검수에서 자체 호스팅 폰트, 확대·4단 배치한 단계 카드, TUTORIAL·EASY·NORMAL·HARD별 메뉴 회랑이 정상임을 확인하고 M6 수동 게이트 완료
+- Drei `<Html fullscreen>` 계층에 stage·health·timer 헤더, 미니맵, 별점, 데미지 오버레이를 배치한 M7 HUD 구현
+- store의 `paused` 상태와 pause/resume 액션을 추가하고 P·Escape·문서 비가시화·획득 후 pointer lock 상실을 일시정지 경계로 연결
+- 10세그먼트 semantic HealthBar, 목표 방향·표면·고도를 표시하는 Minimap, live/terminal StarDisplay, elapsed Timer, 피해량 기반 가장자리 pulse 구현
+- React Portal 기반 일시정지 Modal에 초기 focus·Tab/Shift+Tab focus trap·focus 복귀와 Continue·Restart·Return 키보드 동작 구현
+- 1947 Mark II 금속·베이클라이트 스타일, 비차단 HUD pointer-events, `showControlHints`, forced-colors, reduced-motion, 320–768px 반응형 계약 반영
+- M6 clear/fail 중앙 결과 안내는 M8 정식 결과 화면 전까지 유지
+- 첫 사용자 실플레이에서 Drei Html transformed 0×0 wrapper 아래 `position: fixed` GameHud·DamageOverlay가 0×0 containing block으로 붕괴·clip되어 HUD 전체가 보이지 않는 회귀 확인
+- GameHud root와 DamageOverlay를 Html 표면 기준 `position: absolute` full surface로 바꾸고, world origin의 behind-camera 숨김을 피하도록 Html anchor를 camera-forward 위치로 이동
+- StageEnvironment HUD 계층, HudVisibility, DamageOverlay 가시성 회귀 테스트 추가
+- 2026-08-14 사용자 재수동 실플레이에서 stage·health·timer·minimap UI와 피격 오버레이가 정상 표시됨을 확인해 0×0 HUD 회귀 수정 게이트 통과
 
 ## 다음 할 일
 
-1. M7 — HealthBar·Timer·Minimap·StarDisplay·DamageOverlay와 일시정지 모달 구현
-2. Html overlay의 Canvas 입력 경계, 키보드·스크린 리더 정보 전달, focus 순서·대비·동작 축소를 포함한 접근성 검증
+1. 사용자 승인에 따라 M7 커밋·푸시
+2. M8 — 결과 화면과 공유 이미지 구현 진입
 
 ## 검증 결과
 
@@ -95,14 +105,27 @@ M6 — 난이도 선택형 19단계 캠페인·다중 표면 착지 확장 (완�
   - 마우스 spike·yaw wrap·30/60/120Hz smoothing·각속도 상한, 난이도/단계 메뉴와 NORMAL/HARD 보조 조명 계약 검증
   - 새 단계 canonical spawn·HP 100·velocity 0·timer 0·stageRunId 증가 및 clear/fail 뒤 선택 난이도 단계 목록 복귀 검증
 - M6 확장 실제 난이도 선택·해금·다중 표면 clear/fail·중앙 결과 안내·terminal 포인터 해제·T 시점 전환·회랑 가시성·모델·성능·최종 UI 수동 검수: 사용자 최종 확인으로 통과
+- M7 최신 자동 검증: 통과
+  - ESLint: 0 errors / 0 warnings
+  - TypeScript 및 import boundary: 통과
+  - Vitest: 25 files / 402 tests 통과; StageEnvironment.hud·HudVisibility·DamageOverlay 회귀 계약 포함
+  - V8 coverage: statements 98.97%, branches 97.32%, functions 99.02%, lines 98.94%
+  - Vite production build: 111 modules, 초기 index 169.55 kB(55.54 kB gzip), lazy SceneCanvas 895.53 kB(244.14 kB gzip); 기존 500 kB 초과 warning만 유지
+- Lighthouse 13.4.1 접근성 감사: `http://127.0.0.1:5173/` 메뉴 화면 accessibility 100, binary failure 0
+  - 첫 실행의 weight-0 `label-content-name` 경고 2개는 App difficulty card의 중복 `aria-label`을 제거해 수정
+  - 같은 메뉴 화면을 재검증해 accessibility 100과 binary failure 0 유지 확인
+  - 감사 범위는 메뉴 화면뿐이므로 인게임 HUD 실제 가시성의 증거로 사용하지 않음
+- M7 사용자 재수동 실플레이 게이트: 통과. 실제 플레이에서 stage·health·timer·minimap UI와 피격 오버레이 정상 표시 확인
 
 ## 현재 제약
 
 - 500 kB 초과 lazy SceneCanvas 경고는 M4 기준선에서 이어 기록하고 M9 LCP/번들 최적화 게이트에서 재검토
 
+- M7 HUD 가시성 회귀 수정·자동검증·사용자 재수동 게이트 완료. 커밋·푸시 승인 획득
+
 ## 미결 질문
 
-- M7: 전체 화면 Canvas 위 Html overlay에서 HUD의 비차단 pointer-events와 일시정지 모달의 포인터 잠금 해제·focus trap·복귀 경계를 어떤 컴포넌트 계약으로 고정할 것인가?
+- M7 미결 사항 없음. absolute full-surface HUD와 camera-forward Html anchor, 피격 오버레이의 실제 가시성 확인 완료
 
 ## 결정 로그
 
@@ -152,3 +175,8 @@ M6 — 난이도 선택형 19단계 캠페인·다중 표면 착지 확장 (완�
 | 2026-08-12 | 선택 난이도를 실행 중 보존하고 clear/fail 뒤 Enter로 그 단계 목록 복귀   | 결과 뒤 다음 전역 번호를 자동 시작하지 않고 같은 난이도에서 선택권을 유지                   |
 | 2026-08-12 | NORMAL/HARD에 그림자 없는 은은한 분산 보조 조명을 배치                   | 어두운 분위기와 기존 성능 예산을 유지하면서 완전 암부의 플레이 불가를 방지                  |
 | 2026-08-13 | 사용자 최종 브라우저 검수로 M6 게이트 완료                               | 자체 호스팅 폰트·단계 카드 정보 위계·난이도별 메뉴 회랑을 포함한 최종 UI와 플레이 흐름 확인 |
+| 2026-08-13 | M7 HUD를 Drei `<Html fullscreen>` 계층에 배치                            | 3D Canvas와 같은 수명주기에서 정보를 동기화하면서 비대화형 영역은 비행 입력을 차단하지 않음 |
+| 2026-08-13 | P·Escape·비가시화·획득 후 pointer lock 상실을 `paused` 상태로 통합       | 물리·타이머·피해를 함께 정지하고 Continue 때 명시적으로 포인터 잠금과 플레이를 복원         |
+| 2026-08-13 | 메뉴 Lighthouse와 인게임 HUD 가시성 검증을 분리                          | 메뉴 DOM 감사만으로 실제 WebGL 위 HUD 표시를 확정하지 않음                                  |
+| 2026-08-13 | Lighthouse 13.4.1 메뉴 접근성 감사를 완료                                | 중복 `aria-label` 제거·재검증 후 accessibility 100, binary failure 0을 확인                 |
+| 2026-08-14 | HUD 회귀 수정 재검수 통과로 M7 완료 및 커밋·푸시 승인                    | 실제 플레이에서 stage·health·timer·minimap UI와 피격 오버레이 정상 표시 확인                |

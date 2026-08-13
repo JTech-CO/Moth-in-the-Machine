@@ -61,7 +61,7 @@ export default function SceneCanvas({
   return (
     <section className={styles.viewport} aria-label="Harvard Mark II relay bay moth flight">
       <Canvas
-        data-render-surface="m5-player-flight"
+        data-render-surface="m7-instrument-flight"
         camera={{
           position: [...CAMERA_CONFIG.position],
           fov: CAMERA_CONFIG.fov,
@@ -94,7 +94,8 @@ export default function SceneCanvas({
 
       <p className={styles.visuallyHidden}>
         어두운 Mark II 컴퓨터 내부 회랑에서 나방을 조종합니다. 화면을 클릭한 뒤 WASD 또는 화살표
-        키와 마우스로 비행하고 Space 키로 호버와 착륙 준비 상태를 전환합니다.
+        키와 마우스로 비행하고 Space 키로 호버와 착륙 준비 상태를 전환합니다. P 또는 Escape 키로
+        일시정지합니다.
       </p>
     </section>
   );
