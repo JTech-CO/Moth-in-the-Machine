@@ -18,6 +18,7 @@ import {
   type SaveProgressResult,
 } from '@/store/persistence';
 import { applyHealthDelta, isHealthDepleted } from '@/utils/health';
+import { isRenderQuality } from '@/utils/renderQuality';
 import { calculateStars, type StarRating } from '@/utils/starCalculator';
 import { getStageDefinition } from '@/utils/stages';
 import type { Vec3 } from '@/utils/collision';
@@ -324,14 +325,22 @@ export function createGameStore(dependencies: GameStoreDependencies = {}): GameS
         throw new TypeError('showControlHints must be a boolean.');
       }
 
-      if (patch.showControlHints === undefined) {
+      if (patch.renderQuality !== undefined && !isRenderQuality(patch.renderQuality)) {
+        throw new TypeError('renderQuality must be auto or low.');
+      }
+
+      const showControlHints = patch.showControlHints;
+      const renderQuality = patch.renderQuality;
+
+      if (showControlHints === undefined && renderQuality === undefined) {
         return;
       }
 
       set((state) => ({
         settings: {
           ...state.settings,
-          showControlHints: patch.showControlHints as boolean,
+          ...(showControlHints === undefined ? {} : { showControlHints }),
+          ...(renderQuality === undefined ? {} : { renderQuality }),
         },
       }));
     },

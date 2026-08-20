@@ -3,16 +3,91 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="application-name" content="Moth in the Machine" />
     <meta
       name="description"
       content="1947년 Harvard Mark II의 실제 나방 버그에서 영감을 받은 웹 3D 캐주얼 게임"
     />
+    <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0a0e17" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:title" content="Moth in the Machine" />
+    <meta
+      property="og:description"
+      content="1947년 Harvard Mark II의 릴레이 회랑을 비행해 정확한 접점에 착지하세요."
+    />
+    <meta property="og:url" content="https://jtech-co.github.io/Moth-in-the-Machine/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Moth in the Machine" />
+    <meta
+      name="twitter:description"
+      content="나방이 되어 Mark II 컴퓨터의 19개 비행 단계를 돌파하세요."
+    />
+    <link rel="canonical" href="https://jtech-co.github.io/Moth-in-the-Machine/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Moth in the Machine</title>
+    <style>
+      html,
+      body {
+        min-width: 320px;
+        min-height: 100%;
+        margin: 0;
+        color: #e8e4d9;
+        background: #0a0e17;
+      }
+
+      .boot-shell {
+        box-sizing: border-box;
+        display: grid;
+        min-height: 100vh;
+        min-height: 100dvh;
+        align-content: center;
+        padding: clamp(2rem, 7vw, 6rem);
+        background:
+          radial-gradient(circle at 32% 48%, rgba(240, 193, 75, 0.12), transparent 34rem), #0a0e17;
+        font-family: Inter, system-ui, sans-serif;
+      }
+
+      .boot-shell p {
+        max-width: 50rem;
+        margin: 0 0 1rem;
+        color: #a8a49a;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.12em;
+      }
+
+      .boot-shell h1 {
+        max-width: 10ch;
+        margin: 0;
+        font-size: clamp(3rem, 10vw, 8rem);
+        line-height: 0.82;
+        letter-spacing: -0.07em;
+        text-transform: uppercase;
+      }
+
+      .boot-shell h1 span {
+        color: #f0c14b;
+        font-size: 0.46em;
+        letter-spacing: -0.03em;
+      }
+
+      .boot-status {
+        margin-top: 2rem !important;
+        color: #f0c14b !important;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="boot-shell" aria-label="Moth in the Machine 로딩 화면">
+        <p>HARVARD COMPUTATION LABORATORY · MARK II · 1947</p>
+        <h1>Moth <span>in the</span> Machine</h1>
+        <p class="boot-status" role="status">INITIALIZING RELAY BAY</p>
+        <noscript>이 게임을 플레이하려면 JavaScript를 활성화해 주세요.</noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

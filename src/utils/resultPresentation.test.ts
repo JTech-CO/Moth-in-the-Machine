@@ -48,7 +48,8 @@ describe('createResultPresentation', () => {
         'Moth in the Machine — STAGE CLEARED\n' +
         'E-01 · RELAY APPROACH · RELAY A-16\n' +
         '★★★ · 00:01.9 · 100 HP\n' +
-        '#MothInTheMachine #MarkII',
+        '#MothInTheMachine #MarkII\n' +
+        'https://jtech-co.github.io/Moth-in-the-Machine/',
     });
     expect(Object.isFrozen(presentation)).toBe(true);
   });

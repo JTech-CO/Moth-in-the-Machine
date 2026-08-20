@@ -117,8 +117,11 @@ function App() {
   const currentStageId = useGameStore((state) => state.currentStageId);
   const result = useGameStore((state) => state.result);
   const progress = useGameStore((state) => state.progress);
+  const renderQuality = useGameStore((state) => state.settings.renderQuality);
   const startStage = useGameStore((state) => state.startStage);
   const returnToMenu = useGameStore((state) => state.returnToMenu);
+  const updateSettings = useGameStore((state) => state.updateSettings);
+  const saveProgress = useGameStore((state) => state.saveProgress);
   const markSceneUnavailable = useCallback(() => setSceneStatus('unavailable'), []);
   const sceneReady = sceneStatus === 'ready';
   const showMenu = gameStatus === 'idle';
@@ -141,6 +144,14 @@ function App() {
     [gameStatus, sceneStatus, startStage],
   );
 
+  const toggleRenderQuality = useCallback(() => {
+    const nextRenderQuality = renderQuality === 'low' ? 'auto' : 'low';
+
+    setSceneStatus('loading');
+    updateSettings({ renderQuality: nextRenderQuality });
+    saveProgress();
+  }, [renderQuality, saveProgress, updateSettings]);
+
   const menuStatus =
     sceneStatus === 'unavailable'
       ? 'FLIGHT SYSTEMS OFFLINE'
@@ -152,7 +163,11 @@ function App() {
     <main className={styles.screen}>
       <SceneErrorBoundary onError={markSceneUnavailable}>
         <Suspense fallback={<SceneLoading />}>
-          <SceneCanvas menuDifficulty={selectedDifficulty} onAvailabilityChange={setSceneStatus} />
+          <SceneCanvas
+            menuDifficulty={selectedDifficulty}
+            onAvailabilityChange={setSceneStatus}
+            renderQuality={renderQuality}
+          />
         </Suspense>
       </SceneErrorBoundary>
 
@@ -348,9 +363,22 @@ function App() {
       {showMenu ? (
         <footer className={styles.footer}>
           <span>NO INSTALL · 19 STAGES · TUTORIAL + EASY / NORMAL / HARD</span>
-          <span className={sceneReady ? styles.ready : styles.pending} role="status">
-            <span aria-hidden="true">●</span> {menuStatus}
-          </span>
+          <div className={styles.footerSystems}>
+            <button
+              className={styles.qualityToggle}
+              type="button"
+              aria-label={
+                renderQuality === 'low' ? '자동 적응형 렌더링으로 전환' : '저사양 렌더링으로 전환'
+              }
+              aria-pressed={renderQuality === 'low'}
+              onClick={toggleRenderQuality}
+            >
+              QUALITY · {renderQuality === 'low' ? 'LOW SPEC' : 'AUTO / ADAPTIVE'}
+            </button>
+            <span className={sceneReady ? styles.ready : styles.pending} role="status">
+              <span aria-hidden="true">●</span> {menuStatus}
+            </span>
+          </div>
         </footer>
       ) : null}
     </main>

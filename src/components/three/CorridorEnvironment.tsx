@@ -12,6 +12,7 @@ import {
 } from '@/utils/corridorLayouts';
 import type { Aabb } from '@/utils/collision';
 import { getCorridorLighting } from '@/utils/corridorLighting';
+import { selectForRenderQuality, type RenderQuality } from '@/utils/renderQuality';
 
 const FLOOR_SEAM_Z = [-1, -6, -11, -16, -21] as const;
 const GALLERY_COIL_Z = [1.2, -2.2, -6.4, -10.6, -14.8, -19, -23.2] as const;
@@ -32,7 +33,13 @@ function getAabbTransform(collider: Aabb) {
   };
 }
 
-function CorridorShell({ environment }: { readonly environment: CorridorEnvironmentId }) {
+function CorridorShell({
+  environment,
+  renderQuality,
+}: {
+  readonly environment: CorridorEnvironmentId;
+  readonly renderQuality: RenderQuality;
+}) {
   const hard = environment === 'logic-labyrinth';
   const normal = environment === 'switching-gallery';
   const floorColor = hard ? '#0c1115' : normal ? '#12191c' : SCENE_COLORS.floor;
@@ -45,7 +52,7 @@ function CorridorShell({ environment }: { readonly environment: CorridorEnvironm
         <meshStandardMaterial color={floorColor} metalness={0.66} roughness={0.68} />
       </mesh>
 
-      {FLOOR_SEAM_Z.map((seamZ) => (
+      {selectForRenderQuality(FLOOR_SEAM_Z, renderQuality).map((seamZ) => (
         <mesh key={seamZ} position={[0, -2.19, seamZ]}>
           <boxGeometry args={[10.08, 0.025, hard ? 0.09 : 0.055]} />
           <meshStandardMaterial color={SCENE_COLORS.metalLight} metalness={0.76} roughness={0.5} />
@@ -77,7 +84,7 @@ function CorridorShell({ environment }: { readonly environment: CorridorEnvironm
         </mesh>
       ))}
 
-      {CORRIDOR_SECTION_Z.map((sectionZ) => (
+      {selectForRenderQuality(CORRIDOR_SECTION_Z, renderQuality).map((sectionZ) => (
         <mesh key={sectionZ} position={[0, 2.84, sectionZ]}>
           <boxGeometry args={[10.2, 0.22, hard ? 0.32 : 0.22]} />
           <meshStandardMaterial color={SCENE_COLORS.metalLight} metalness={0.74} roughness={0.5} />
@@ -92,7 +99,13 @@ function CorridorShell({ environment }: { readonly environment: CorridorEnvironm
   );
 }
 
-function StructuralBlock({ structure }: { readonly structure: StructuralBlockDefinition }) {
+function StructuralBlock({
+  renderQuality,
+  structure,
+}: {
+  readonly renderQuality: RenderQuality;
+  readonly structure: StructuralBlockDefinition;
+}) {
   const { position, size } = getAabbTransform(structure.collider);
   const isDeck = structure.style === 'deck';
   const isCore = structure.style === 'core';
@@ -118,7 +131,7 @@ function StructuralBlock({ structure }: { readonly structure: StructuralBlockDef
           roughness={0.3}
         />
       </mesh>
-      {!isDeck && !isCore
+      {renderQuality === 'auto' && !isDeck && !isCore
         ? [-0.32, 0, 0.32].map((ratio) => (
             <mesh key={ratio} position={[0, size[1] * ratio, size[2] / 2 + 0.016]}>
               <boxGeometry args={[Math.max(0.2, size[0] * 0.72), 0.045, 0.025]} />
@@ -130,19 +143,26 @@ function StructuralBlock({ structure }: { readonly structure: StructuralBlockDef
   );
 }
 
-function RelayBayDecor() {
+function RelayBayDecor({ renderQuality }: { readonly renderQuality: RenderQuality }) {
   return (
     <>
       <RelayArchitecture />
-      {VACUUM_TUBE_POSITIONS.map((position) => (
+      {selectForRenderQuality(VACUUM_TUBE_POSITIONS, renderQuality).map((position) => (
         <VacuumTube key={position.join(':')} position={position} />
       ))}
     </>
   );
 }
 
-function CorridorGuideLighting({ environment }: { readonly environment: CorridorEnvironmentId }) {
+function CorridorGuideLighting({
+  environment,
+  renderQuality,
+}: {
+  readonly environment: CorridorEnvironmentId;
+  readonly renderQuality: RenderQuality;
+}) {
   const lighting = getCorridorLighting(environment);
+  const fixtures = selectForRenderQuality(lighting.fixtures, renderQuality);
 
   return (
     <group name={`corridor-guide-lighting-${environment}`}>
@@ -151,7 +171,7 @@ function CorridorGuideLighting({ environment }: { readonly environment: Corridor
           args={[lighting.fill.skyColor, lighting.fill.groundColor, lighting.fill.intensity]}
         />
       )}
-      {lighting.fixtures.map((fixture) => (
+      {fixtures.map((fixture) => (
         <group key={fixture.id} name={fixture.id} position={fixture.position}>
           <pointLight
             castShadow={fixture.castsShadow}
@@ -176,10 +196,11 @@ function CorridorGuideLighting({ environment }: { readonly environment: Corridor
   );
 }
 
-function SwitchingGalleryDecor() {
+function SwitchingGalleryDecor({ renderQuality }: { readonly renderQuality: RenderQuality }) {
+  const coilPositions = selectForRenderQuality(GALLERY_COIL_Z, renderQuality);
   return (
     <group name="switching-gallery-machinery">
-      {GALLERY_COIL_Z.flatMap((z) =>
+      {coilPositions.flatMap((z) =>
         [-1, 1].map((side) => (
           <group key={`${side}:${z}`} position={[side * 4.12, 0.25, z]}>
             <mesh rotation={[0, 0, Math.PI / 2]}>
@@ -203,7 +224,7 @@ function SwitchingGalleryDecor() {
           </group>
         )),
       )}
-      {[-2.6, 0, 2.6].map((x) => (
+      {selectForRenderQuality([-2.6, 0, 2.6], renderQuality).map((x) => (
         <mesh key={x} position={[x, 2.46, -10]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.055, 0.055, 48, 8]} />
           <meshStandardMaterial color={SCENE_COLORS.brass} metalness={0.7} roughness={0.4} />
@@ -213,10 +234,11 @@ function SwitchingGalleryDecor() {
   );
 }
 
-function LogicLabyrinthDecor() {
+function LogicLabyrinthDecor({ renderQuality }: { readonly renderQuality: RenderQuality }) {
+  const framePositions = selectForRenderQuality(CORE_FRAME_Z, renderQuality);
   return (
     <group name="logic-labyrinth-machinery">
-      {CORE_FRAME_Z.map((z, index) => (
+      {framePositions.map((z, index) => (
         <group key={z} position={[0, 0.2, z]}>
           <mesh>
             <torusGeometry args={[3.72, 0.07, 6, 24]} />
@@ -246,20 +268,26 @@ function LogicLabyrinthDecor() {
 
 export function CorridorEnvironment({
   environment,
+  renderQuality,
 }: {
   readonly environment: CorridorEnvironmentId;
+  readonly renderQuality: RenderQuality;
 }) {
   const layout = getCorridorLayout(environment);
 
   return (
-    <group name={`corridor-environment-${environment}`} userData={{ environment }}>
-      <CorridorShell environment={environment} />
-      <CorridorGuideLighting environment={environment} />
-      {environment === 'relay-bay' ? <RelayBayDecor /> : null}
-      {environment === 'switching-gallery' ? <SwitchingGalleryDecor /> : null}
-      {environment === 'logic-labyrinth' ? <LogicLabyrinthDecor /> : null}
+    <group name={`corridor-environment-${environment}`} userData={{ environment, renderQuality }}>
+      <CorridorShell environment={environment} renderQuality={renderQuality} />
+      <CorridorGuideLighting environment={environment} renderQuality={renderQuality} />
+      {environment === 'relay-bay' ? <RelayBayDecor renderQuality={renderQuality} /> : null}
+      {environment === 'switching-gallery' ? (
+        <SwitchingGalleryDecor renderQuality={renderQuality} />
+      ) : null}
+      {environment === 'logic-labyrinth' ? (
+        <LogicLabyrinthDecor renderQuality={renderQuality} />
+      ) : null}
       {layout.structures.map((structure) => (
-        <StructuralBlock key={structure.id} structure={structure} />
+        <StructuralBlock key={structure.id} renderQuality={renderQuality} structure={structure} />
       ))}
     </group>
   );

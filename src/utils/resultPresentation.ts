@@ -34,6 +34,7 @@ export interface ResultPresentation {
 
 const GAME_NAME = 'Moth in the Machine';
 const SHARE_HASHTAGS = '#MothInTheMachine #MarkII';
+const GAME_URL = 'https://jtech-co.github.io/Moth-in-the-Machine/';
 const DIFFICULTY_CODES: Readonly<Record<StageDifficulty, string>> = Object.freeze({
   tutorial: 'T',
   easy: 'E',
@@ -186,6 +187,7 @@ export function createResultPresentation(
     `${stageCode} · ${stage.name} · ${stage.targetLabel}`,
     `${starText} · ${timeLabel} · ${healthLabel}`,
     SHARE_HASHTAGS,
+    GAME_URL,
   ].join('\n');
 
   return Object.freeze({

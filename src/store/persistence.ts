@@ -6,6 +6,7 @@ import {
   type GameSettings,
   type StageProgress,
 } from '@/store/gameTypes';
+import { DEFAULT_RENDER_QUALITY, isRenderQuality } from '@/utils/renderQuality';
 
 export const GAME_STORAGE_KEY = 'mothProgress';
 export const GAME_SCHEMA_VERSION = 1 as const;
@@ -146,12 +147,18 @@ function parseSettings(value: unknown): ParsedValue<GameSettings> {
       valid: false,
     };
   }
+  const renderQualityIsValid =
+    value.renderQuality === undefined || isRenderQuality(value.renderQuality);
+  const renderQuality = isRenderQuality(value.renderQuality)
+    ? value.renderQuality
+    : DEFAULT_RENDER_QUALITY;
 
   return {
     value: {
       showControlHints: value.showControlHints,
+      renderQuality,
     },
-    valid: true,
+    valid: renderQualityIsValid,
   };
 }
 

@@ -57,6 +57,7 @@ describe('browserGameStore', () => {
       },
       settings: {
         showControlHints: false,
+        renderQuality: 'auto',
       },
     });
   });

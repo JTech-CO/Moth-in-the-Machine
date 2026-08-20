@@ -192,7 +192,7 @@ describe('createGameStore', () => {
   it('returns to the campaign menu without discarding durable progress or settings', () => {
     const store = createGameStore({ now: fixedClock });
 
-    store.getState().updateSettings({ showControlHints: false });
+    store.getState().updateSettings({ showControlHints: false, renderQuality: 'low' });
     store.getState().startStage(1);
     store.getState().setElapsedTimeMs(2000);
     store.getState().updateHealth(-20);
@@ -209,7 +209,7 @@ describe('createGameStore', () => {
       status: 'idle',
       stars: 0,
       result: null,
-      settings: { showControlHints: false },
+      settings: { showControlHints: false, renderQuality: 'low' },
     });
     expect(store.getState().progress).toBe(completedProgress);
 
@@ -615,7 +615,7 @@ describe('createGameStore', () => {
     firstStore.getState().setElapsedTimeMs(5000);
     firstStore.getState().updateHealth(-50);
     firstStore.getState().land(true);
-    firstStore.getState().updateSettings({ showControlHints: false });
+    firstStore.getState().updateSettings({ showControlHints: false, renderQuality: 'low' });
 
     expect(firstStore.getState().saveProgress()).toBe('saved');
 
@@ -628,6 +628,7 @@ describe('createGameStore', () => {
       },
       settings: {
         showControlHints: false,
+        renderQuality: 'low',
       },
     });
     expect(persisted).not.toHaveProperty('player');
@@ -655,6 +656,7 @@ describe('createGameStore', () => {
       },
       settings: {
         showControlHints: false,
+        renderQuality: 'low',
       },
       persistenceStatus: 'loaded',
     });
@@ -669,7 +671,7 @@ describe('createGameStore', () => {
     expect(store.getState()).toMatchObject({
       persistenceStatus: 'invalid',
       progress: { completedStages: [], totalStars: 0 },
-      settings: { showControlHints: true },
+      settings: { showControlHints: true, renderQuality: 'auto' },
     });
     expect(store.getState().saveProgress()).toBe('saved');
     expect(() => JSON.parse(storage.getItem(GAME_STORAGE_KEY)!)).not.toThrow();

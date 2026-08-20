@@ -1,5 +1,6 @@
 import type { StarRating } from '@/utils/starCalculator';
 import type { Vec3 } from '@/utils/collision';
+import { DEFAULT_RENDER_QUALITY, type RenderQuality } from '@/utils/renderQuality';
 
 export type CompletedStarRating = Exclude<StarRating, 0>;
 export type SessionStatus = 'idle' | 'playing' | 'paused' | 'cleared' | 'failed';
@@ -32,6 +33,7 @@ export interface GameProgress {
 
 export interface GameSettings {
   readonly showControlHints: boolean;
+  readonly renderQuality: RenderQuality;
 }
 
 export function createDefaultPlayerState(position: Vec3 = { x: 0, y: 0, z: 0 }): PlayerState {
@@ -53,5 +55,6 @@ export function createDefaultProgress(): GameProgress {
 export function createDefaultSettings(): GameSettings {
   return {
     showControlHints: true,
+    renderQuality: DEFAULT_RENDER_QUALITY,
   };
 }

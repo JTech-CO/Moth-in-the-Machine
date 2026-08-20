@@ -7,9 +7,11 @@ import {
   CAMERA_CONFIG,
   CANVAS_CONFIG,
   calculateAdaptiveDpr,
+  getCanvasConfig,
   SCENE_COLORS,
 } from '@/components/three/sceneConfig';
 import { StageEnvironment } from '@/components/three/StageEnvironment';
+import type { RenderQuality } from '@/utils/renderQuality';
 import type { StageDifficulty } from '@/utils/stages';
 
 export type SceneAvailability = 'ready' | 'unavailable';
@@ -17,6 +19,7 @@ export type SceneAvailability = 'ready' | 'unavailable';
 interface SceneCanvasProps {
   readonly onAvailabilityChange: (availability: SceneAvailability) => void;
   readonly menuDifficulty?: StageDifficulty | null;
+  readonly renderQuality?: RenderQuality;
 }
 
 interface WebGLFallbackProps {
@@ -42,25 +45,26 @@ function WebGLFallback({ onUnavailable }: WebGLFallbackProps) {
 export default function SceneCanvas({
   menuDifficulty = null,
   onAvailabilityChange,
+  renderQuality = 'auto',
 }: SceneCanvasProps) {
-  const initialDpr = useRef(
-    calculateAdaptiveDpr(
-      1,
-      typeof window === 'undefined' ? CANVAS_CONFIG.dpr[0] : window.devicePixelRatio,
-    ),
+  const deviceDpr = useRef(
+    typeof window === 'undefined' ? CANVAS_CONFIG.dpr[0] : window.devicePixelRatio,
   );
-  const [adaptiveDpr, setAdaptiveDpr] = useState(initialDpr.current);
+  const [performanceFactor, setPerformanceFactor] = useState(1);
+  const canvasConfig = getCanvasConfig(renderQuality);
+  const adaptiveDpr = calculateAdaptiveDpr(performanceFactor, deviceDpr.current, renderQuality);
   const markUnavailable = useCallback(
     () => onAvailabilityChange('unavailable'),
     [onAvailabilityChange],
   );
   const updateAdaptiveDpr = useCallback((factor: number) => {
-    setAdaptiveDpr(calculateAdaptiveDpr(factor, initialDpr.current));
+    setPerformanceFactor(factor);
   }, []);
 
   return (
     <section className={styles.viewport} aria-label="Harvard Mark II relay bay moth flight">
       <Canvas
+        key={renderQuality}
         data-render-surface="m7-instrument-flight"
         camera={{
           position: [...CAMERA_CONFIG.position],
@@ -73,7 +77,7 @@ export default function SceneCanvas({
         frameloop="always"
         gl={{
           alpha: false,
-          antialias: CANVAS_CONFIG.antialias,
+          antialias: canvasConfig.antialias,
           powerPreference: CANVAS_CONFIG.powerPreference,
           preserveDrawingBuffer: false,
         }}
@@ -81,7 +85,7 @@ export default function SceneCanvas({
         onCreated={({ gl }) => {
           gl.outputColorSpace = SRGBColorSpace;
           gl.toneMapping = ACESFilmicToneMapping;
-          gl.toneMappingExposure = CANVAS_CONFIG.toneMappingExposure;
+          gl.toneMappingExposure = canvasConfig.toneMappingExposure;
           gl.setClearColor(SCENE_COLORS.background, 1);
           onAvailabilityChange('ready');
         }}
@@ -89,6 +93,7 @@ export default function SceneCanvas({
         <StageEnvironment
           menuDifficulty={menuDifficulty}
           onPerformanceFactorChange={updateAdaptiveDpr}
+          renderQuality={renderQuality}
         />
       </Canvas>
 

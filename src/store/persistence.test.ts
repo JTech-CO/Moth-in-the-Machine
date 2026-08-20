@@ -30,20 +30,20 @@ describe('loadPersistentGame', () => {
   it('returns safe defaults when storage is unavailable or empty', () => {
     expect(loadPersistentGame(null)).toEqual({
       progress: { completedStages: [], totalStars: 0 },
-      settings: { showControlHints: true },
+      settings: { showControlHints: true, renderQuality: 'auto' },
       status: 'unavailable',
       canWrite: false,
     });
 
     expect(loadPersistentGame(new MemoryStorage())).toEqual({
       progress: { completedStages: [], totalStars: 0 },
-      settings: { showControlHints: true },
+      settings: { showControlHints: true, renderQuality: 'auto' },
       status: 'empty',
       canWrite: true,
     });
   });
 
-  it('loads a valid v1 payload and sorts completed stages', () => {
+  it('loads a legacy v1 payload, defaults its quality, and sorts completed stages', () => {
     const storage = seedStorage({
       schemaVersion: GAME_SCHEMA_VERSION,
       progress: {
@@ -68,6 +68,7 @@ describe('loadPersistentGame', () => {
       },
       settings: {
         showControlHints: false,
+        renderQuality: 'auto',
       },
       status: 'loaded',
       canWrite: true,
@@ -102,6 +103,7 @@ describe('loadPersistentGame', () => {
       },
       settings: {
         showControlHints: true,
+        renderQuality: 'auto',
       },
       status: 'invalid',
       canWrite: true,
@@ -125,7 +127,7 @@ describe('loadPersistentGame', () => {
     expect(() => loadPersistentGame(storage)).not.toThrow();
     expect(loadPersistentGame(storage)).toMatchObject({
       progress: { completedStages: [], totalStars: 0 },
-      settings: { showControlHints: true },
+      settings: { showControlHints: true, renderQuality: 'auto' },
       status: 'invalid',
       canWrite: true,
     });
@@ -143,7 +145,7 @@ describe('loadPersistentGame', () => {
 
     expect(loadPersistentGame(storage)).toEqual({
       progress: { completedStages: [], totalStars: 0 },
-      settings: { showControlHints: true },
+      settings: { showControlHints: true, renderQuality: 'auto' },
       status: 'future-version',
       canWrite: false,
     });
@@ -171,6 +173,7 @@ describe('savePersistentGame', () => {
   };
   const settings = {
     showControlHints: false,
+    renderQuality: 'low' as const,
   };
 
   it('returns explicit outcomes for unavailable and read-only storage', () => {

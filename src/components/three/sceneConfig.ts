@@ -1,3 +1,5 @@
+import type { RenderQuality } from '@/utils/renderQuality';
+
 export const SCENE_COLORS = {
   background: '#0a0e17',
   fog: '#0a0e17',
@@ -101,6 +103,13 @@ export const CANVAS_CONFIG = {
   toneMappingExposure: 0.92,
 } as const;
 
+export const LOW_SPEC_CANVAS_CONFIG = {
+  dpr: [0.75, 1] as const,
+  antialias: false,
+  powerPreference: 'high-performance' as const,
+  toneMappingExposure: 0.92,
+} as const;
+
 export const PERFORMANCE_CONFIG = {
   factor: 1,
   step: 0.25,
@@ -110,9 +119,19 @@ export const PERFORMANCE_CONFIG = {
   bounds: [57, 61] as const,
 } as const;
 
-export function calculateAdaptiveDpr(factor: number, initialDpr: number): number {
+export const LOW_SPEC_PERFORMANCE_BOUNDS = [28, 32] as const;
+
+export function getCanvasConfig(renderQuality: RenderQuality) {
+  return renderQuality === 'low' ? LOW_SPEC_CANVAS_CONFIG : CANVAS_CONFIG;
+}
+
+export function calculateAdaptiveDpr(
+  factor: number,
+  initialDpr: number,
+  renderQuality: RenderQuality = 'auto',
+): number {
   const normalizedFactor = Number.isFinite(factor) ? Math.min(1, Math.max(0, factor)) : 0;
-  const [minimumDpr, maximumDpr] = CANVAS_CONFIG.dpr;
+  const [minimumDpr, maximumDpr] = getCanvasConfig(renderQuality).dpr;
   const normalizedInitialDpr = Number.isFinite(initialDpr)
     ? Math.min(maximumDpr, Math.max(minimumDpr, initialDpr))
     : minimumDpr;
@@ -121,8 +140,12 @@ export function calculateAdaptiveDpr(factor: number, initialDpr: number): number
   return Math.round(targetDpr * 100) / 100;
 }
 
-export function getPerformanceBounds(): [lower: number, upper: number] {
-  return [PERFORMANCE_CONFIG.bounds[0], PERFORMANCE_CONFIG.bounds[1]];
+export function getPerformanceBounds(
+  renderQuality: RenderQuality = 'auto',
+): [lower: number, upper: number] {
+  const bounds = renderQuality === 'low' ? LOW_SPEC_PERFORMANCE_BOUNDS : PERFORMANCE_CONFIG.bounds;
+
+  return [bounds[0], bounds[1]];
 }
 
 export const FOG_CONFIG = {

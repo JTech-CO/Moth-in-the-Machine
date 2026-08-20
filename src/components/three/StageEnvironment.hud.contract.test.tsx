@@ -24,6 +24,7 @@ interface PlayerFlightRigContract {
 }
 
 interface PerformanceMonitorContract {
+  readonly bounds: () => readonly [number, number];
   readonly onChange: (api: { readonly factor: number }) => void;
 }
 
@@ -115,9 +116,15 @@ vi.mock('@/hooks/useGameStore', () => ({
   useGameStore: (selector: (state: typeof captured.state) => unknown) => selector(captured.state),
 }));
 
-function renderStageEnvironment(onPerformanceFactorChange = vi.fn()) {
+function renderStageEnvironment(
+  onPerformanceFactorChange = vi.fn(),
+  renderQuality: 'auto' | 'low' = 'auto',
+) {
   return renderToStaticMarkup(
-    <StageEnvironment onPerformanceFactorChange={onPerformanceFactorChange} />,
+    <StageEnvironment
+      onPerformanceFactorChange={onPerformanceFactorChange}
+      renderQuality={renderQuality}
+    />,
   );
 }
 
@@ -208,6 +215,10 @@ describe('M7 StageEnvironment HUD integration contract', () => {
 
     captured.performanceMonitor?.onChange({ factor: 0.42 });
     expect(onPerformanceFactorChange).toHaveBeenCalledWith(0.42);
+    expect(captured.performanceMonitor?.bounds()).toEqual([57, 61]);
+
+    renderStageEnvironment(vi.fn(), 'low');
+    expect(captured.performanceMonitor?.bounds()).toEqual([28, 32]);
     expect(captured.listeners.has('keydown')).toBe(false);
   });
 

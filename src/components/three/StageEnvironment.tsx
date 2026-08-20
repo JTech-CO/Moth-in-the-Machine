@@ -19,6 +19,7 @@ import {
   SCENE_COLORS,
 } from '@/components/three/sceneConfig';
 import { useGameStore } from '@/hooks/useGameStore';
+import type { RenderQuality } from '@/utils/renderQuality';
 import {
   FIRST_STAGE_ID,
   getStageDefinition,
@@ -30,9 +31,13 @@ import {
 interface StageEnvironmentProps {
   readonly menuDifficulty?: StageDifficulty | null;
   readonly onPerformanceFactorChange: (factor: number) => void;
+  readonly renderQuality?: RenderQuality;
 }
 
-type AdaptiveSceneDprProps = Pick<StageEnvironmentProps, 'onPerformanceFactorChange'>;
+interface AdaptiveSceneDprProps {
+  readonly onPerformanceFactorChange: (factor: number) => void;
+  readonly renderQuality: RenderQuality;
+}
 
 interface StageHudLayerProps {
   readonly stage: StageDefinition;
@@ -63,17 +68,21 @@ function StageHudLayer({ stage }: StageHudLayerProps) {
   );
 }
 
-function AdaptiveSceneDpr({ onPerformanceFactorChange }: AdaptiveSceneDprProps) {
+function AdaptiveSceneDpr({ onPerformanceFactorChange, renderQuality }: AdaptiveSceneDprProps) {
   const reportFactor = useCallback(
     ({ factor }: PerformanceMonitorApi) => {
       onPerformanceFactorChange(factor);
     },
     [onPerformanceFactorChange],
   );
+  const readPerformanceBounds = useCallback(
+    () => getPerformanceBounds(renderQuality),
+    [renderQuality],
+  );
 
   return (
     <PerformanceMonitor
-      bounds={getPerformanceBounds}
+      bounds={readPerformanceBounds}
       factor={PERFORMANCE_CONFIG.factor}
       iterations={PERFORMANCE_CONFIG.iterations}
       ms={PERFORMANCE_CONFIG.sampleMs}
@@ -87,6 +96,7 @@ function AdaptiveSceneDpr({ onPerformanceFactorChange }: AdaptiveSceneDprProps) 
 export function StageEnvironment({
   menuDifficulty = null,
   onPerformanceFactorChange,
+  renderQuality = 'auto',
 }: StageEnvironmentProps) {
   const currentStageId = useGameStore((state) => state.currentStageId);
   const stageRunId = useGameStore((state) => state.stageRunId);
@@ -106,7 +116,7 @@ export function StageEnvironment({
 
       <ambientLight color={SCENE_COLORS.cream} intensity={0.38} />
 
-      <CorridorEnvironment environment={corridorEnvironment} />
+      <CorridorEnvironment environment={corridorEnvironment} renderQuality={renderQuality} />
 
       {hasActiveRun ? (
         <>
@@ -120,7 +130,10 @@ export function StageEnvironment({
           <StageHudLayer stage={activeStage} />
         </>
       ) : null}
-      <AdaptiveSceneDpr onPerformanceFactorChange={onPerformanceFactorChange} />
+      <AdaptiveSceneDpr
+        onPerformanceFactorChange={onPerformanceFactorChange}
+        renderQuality={renderQuality}
+      />
     </>
   );
 }

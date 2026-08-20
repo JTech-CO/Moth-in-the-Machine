@@ -5,7 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from '@/App';
 import SceneCanvas, { type SceneAvailability } from '@/components/three/SceneCanvas';
-import { CAMERA_CONFIG, CANVAS_CONFIG, SCENE_COLORS } from '@/components/three/sceneConfig';
+import {
+  CAMERA_CONFIG,
+  CANVAS_CONFIG,
+  LOW_SPEC_CANVAS_CONFIG,
+  SCENE_COLORS,
+} from '@/components/three/sceneConfig';
 
 interface RendererContract {
   outputColorSpace: string;
@@ -43,6 +48,7 @@ interface WebGLFallbackContract {
 interface StageEnvironmentContract {
   readonly menuDifficulty?: 'tutorial' | 'easy' | 'normal' | 'hard' | null;
   readonly onPerformanceFactorChange: (factor: number) => void;
+  readonly renderQuality: 'auto' | 'low';
 }
 
 const captured = vi.hoisted(() => ({
@@ -54,6 +60,11 @@ const captured = vi.hoisted(() => ({
       completedStages: [] as { stageId: number; bestTimeMs: number; bestStars: number }[],
       totalStars: 0,
     },
+    settings: {
+      renderQuality: 'auto' as 'auto' | 'low',
+    },
+    updateSettings: vi.fn(),
+    saveProgress: vi.fn(() => 'saved' as const),
     currentStageId: null as number | null,
     result: null as null | {
       stageId: number;
@@ -97,8 +108,12 @@ describe('M7 scene canvas contract', () => {
 
   it('renders an explicit, non-playing mission introduction while the lazy scene loads', () => {
     const markup = renderToString(createElement(App));
+    const normalizedMarkup = markup.replace(/<!-- -->/g, '');
     expect(markup).toContain('19 STAGES');
     expect(markup).toContain('EASY / NORMAL / HARD');
+    expect(normalizedMarkup).toContain('QUALITY · AUTO / ADAPTIVE');
+    expect(markup).toContain('aria-label="저사양 렌더링으로 전환"');
+    expect(markup).toContain('aria-pressed="false"');
 
     expect(markup).toContain('id="project-title"');
     expect(markup).toContain('Moth');
@@ -213,6 +228,7 @@ describe('M7 scene canvas contract', () => {
     expect(captured.stageEnvironment?.menuDifficulty).toBe('normal');
     expect(captured.stageEnvironment?.onPerformanceFactorChange).toBeTypeOf('function');
     expect(() => captured.stageEnvironment!.onPerformanceFactorChange(0.5)).not.toThrow();
+    expect(captured.stageEnvironment?.renderQuality).toBe('auto');
     expect(onAvailabilityChange).not.toHaveBeenCalled();
   });
 
@@ -226,6 +242,25 @@ describe('M7 scene canvas contract', () => {
     );
 
     expect(captured.canvas?.dpr).toBe(CANVAS_CONFIG.dpr[1]);
+  });
+
+  it('caps DPR, disables antialiasing, and forwards the low-spec scene budget', () => {
+    vi.stubGlobal('window', { devicePixelRatio: 3 });
+
+    renderToStaticMarkup(
+      createElement(SceneCanvas, {
+        onAvailabilityChange: vi.fn(),
+        renderQuality: 'low',
+      }),
+    );
+
+    expect(captured.canvas?.dpr).toBe(LOW_SPEC_CANVAS_CONFIG.dpr[1]);
+    expect(captured.canvas?.gl).toMatchObject({
+      antialias: false,
+      powerPreference: 'high-performance',
+      preserveDrawingBuffer: false,
+    });
+    expect(captured.stageEnvironment?.renderQuality).toBe('low');
   });
 
   it('exposes an accessible WebGL fallback and initializes Three exactly once', () => {
