@@ -1,4 +1,4 @@
-# Moth in the Machine — 작업 하네스 (Harness)
+# Moth in the Machine: 작업 하네스 (Harness)
 
 **버전**: 0.2\
 **작성일**: 2026년 8월 1일  
@@ -31,7 +31,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 
 ## 1. Phase별 진입조건 · 할 일 · DoD · 검증
 
-### M1 — 기반/스캐폴딩
+### M1: 기반/스캐폴딩
 - 진입조건: 없음 (최초 시작).
 - 할 일: Vite + React 18 + TypeScript 프로젝트 생성 → Tailwind + CSS Variables 설정 → 기본 디렉터리 구조(src/components, store, hooks, utils, assets) 생성 → ESLint + Prettier + 경로 alias 설정.
 - 참조: 기술 백서 §3, §6 / 디자인 백서 §5, §6
@@ -42,7 +42,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 검증: `pnpm lint && pnpm typecheck && pnpm build`
 - 주의: Three.js 관련 패키지는 이 단계에서 설치하지 않는다.
 
-### M2 — 핵심 도메인 로직 (순수 로직)
+### M2: 핵심 도메인 로직 (순수 로직)
 - 진입조건: M1 게이트 통과.
 - 할 일: `utils/starCalculator.ts`, `utils/collision.ts`, `utils/health.ts` 작성 → 체력 감소·별 계산·착지 판정 순수 함수 구현 → 단위 테스트 작성.
 - 참조: 기술 백서 §2.3, §4.3
@@ -53,7 +53,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 검증: `pnpm test -- --coverage` (커버리지 80% 이상)
 - 주의: Three.js나 React에 의존하지 않는 순수 함수로만 작성.
 
-### M3 — 상태 관리 & 영속화
+### M3: 상태 관리 & 영속화
 - 진입조건: M2 게이트 통과.
 - 할 일: Zustand store (`store/gameStore.ts`) 구현 → PlayerState, Stage Progress, Settings → LocalStorage 저장/복원 로직.
 - 참조: 기술 백서 §4.1
@@ -64,7 +64,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 검증: 브라우저 콘솔에서 store 액션 수동 호출 + LocalStorage 확인 + 새로고침 테스트.
 - 주의: 서버 없이 클라이언트만 사용. 시크릿·민감 데이터 없음.
 
-### M4 — 3D 기반 환경 (Three.js 씬)
+### M4: 3D 기반 환경 (Three.js 씬)
 - 진입조건: M3 게이트 통과.
 - 할 일: `@react-three/fiber` + `@react-three/drei` 설치 → 기본 Canvas + 조명 + 안개 + 간단한 바닥/벽 배치 → 카메라 리그 기초.
 - 참조: 기술 백서 §3.2, 디자인 백서 §5.1
@@ -75,7 +75,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 검증: `pnpm dev` 후 브라우저에서 씬 확인 + Performance 탭으로 fps 측정.
 - 주의: 복잡한 모델(gltf)은 아직 넣지 않는다.  primitive만 사용.
 
-### M5 — 플레이어 컨트롤 & 물리 ★
+### M5: 플레이어 컨트롤 & 물리 ★
 - 진입조건: M4 게이트 통과.
 - 할 일: 나방 메시(간단한 geometry) + WASD/마우스 입력 훅 → 속도·관성 적용 → 카메라 추적 → 기본 충돌 박스.
 - 참조: 기술 백서 §2.2, §4.2
@@ -86,7 +86,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 검증: 수동 시연 + 콘솔에 position/velocity 로그 출력으로 수치 확인.
 - 주의: 본격 장애물 데미지는 M6에서 연결.
 
-### M6 — 장애물·체력·스테이지 로직 ★
+### M6: 장애물·체력·스테이지 로직 ★
 - 진입조건: M5 게이트 통과.
 - 할 일: 전선·스파크·과열 릴레이·진공관 배치 → 충돌 시 체력 감소 연결 → 튜토리얼 1 + EASY/NORMAL/HARD 각 6의 총 19단계와 난이도별 회랑 정의 → 메인 난이도·개별 단계 선택 및 진행도 기반 해금 → 바닥·천장·좌우 벽 목표의 착지 성공/실패 판정 → NORMAL/HARD 최소 가시성 보강.
 - 참조: 기술 백서 §2.3, §4.3, §4.4 / 디자인 백서 §2.2, §4.3
@@ -101,7 +101,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 검증: 단위 테스트(해금 경계·중복 클리어·영속 진행도·충돌·데미지·다중 표면 착지·terminal latch) + 수동 플레이로 난이도/개별 단계 선택, 잠금 전환, 기본 3인칭·T 시점 전환, clear/fail 중앙 결과 안내와 즉시 pointer lock 해제·커서 복원, Enter 단계 목록 복귀·R 재시작, 4개 목표 표면, NORMAL/HARD 가시성, 회랑별 경로·성능 확인.
 - 주의: "돌지만 효과 없음"을 막기 위해 체력 바와 실제 health 값이 항상 동기화되어야 한다. 자동 테스트만으로 M6 완료 처리하지 않고 수동 브라우저 게이트 뒤 커밋·푸시한다.
 
-### M7 — HUD & UI 컴포넌트
+### M7: HUD & UI 컴포넌트
 - 진입조건: M6 게이트 통과.
 - 할 일: HealthBar, Timer, Minimap, StarDisplay, DamageOverlay, 일시정지 모달, 스테이지 선택 화면 구현 → Drei `<Html fullscreen>` HUD 계층과 디자인 토큰 적용.
 - 참조: 디자인 백서 §2, §5 / 기술 백서 §5
@@ -123,7 +123,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 수동 재검수 결과(2026-08-14): 실제 플레이에서 stage·health·timer·minimap UI와 피격 오버레이 정상 표시, 0×0 HUD 회귀 수정 유효성 확인.
 - 현재 진행 메모(2026-08-14): M7 DoD 완료. 사용자가 커밋·푸시를 승인했다.
 
-### M8 — 결과 화면 & 공유 이미지 ★
+### M8: 결과 화면 & 공유 이미지 ★
 - 진입조건: M7 게이트 통과.
 - 할 일: 결과 모달 구현 → Canvas API로 1080×1080 로그북 스타일 공유 이미지 생성 → 다운로드/클립보드 복사 기능.
 - 참조: 기술 백서 §2.4, §4.3 / 디자인 백서 §4.3
@@ -141,7 +141,7 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 수동검증 결과(2026-08-14): 사용자 실제 브라우저에서 다운로드 PNG 1080×1080 해상도·크림 로그북 시각, clipboard 이미지/텍스트 붙여넣기, clear/fail terminal 입력과 반응형 동작이 모두 정상임을 확인했다.
 - M8 완료 메모(2026-08-14): 실제 브라우저 공유 게이트 통과로 M8 DoD를 완료하고 커밋·푸시했다.
 
-### M9 — 통합·폴리시·배포
+### M9: 통합·폴리시·배포
 - 진입조건: M8 게이트 통과.
 - 할 일: 전체 플로우 통합 테스트 → 저사양 옵션 → 빌드 최적화 → GitHub Pages 배포. 사운드는 선택 항목으로 분리한다.
 - 참조: 기술 백서 §5.6·§7 / 디자인 백서 §4.3·§7
@@ -153,14 +153,14 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 주의: 시크릿·대용량 바이너리 커밋 금지. 환경변수는 빌드 타임에만 사용.
 - 구현 결과(2026-08-21): 실패→재시도→19단계 전체 클리어→난이도 해금→매 클리어 저장→메뉴 복귀→새 store 복원과 결과·공유 parity를 하나의 종단 통합 테스트로 연결했다.
 - 도달성 결과: 모든 단계에서 구조물, 전선, 스파크, 진공관, 과열 릴레이 전체 범위를 피하는 spawn→목표 접근 경로와 floor·ceiling·left-wall·right-wall fixed-step 착륙을 38개 계약으로 검증했다.
-- 저사양 결과: 영속 `renderQuality: auto | low` 설정, LOW SPEC DPR 0.75–1.0·antialias 비활성화·장식/동적광 감축·28–32fps 적응 범위를 구현하고 NORMAL/HARD 핵심 조명을 보존했다.
+- 저사양 결과: 영속 `renderQuality: auto | low` 설정, LOW SPEC DPR 0.75~1.0·antialias 비활성화·장식/동적광 감축·28~32fps 적응 범위를 구현하고 NORMAL/HARD 핵심 조명을 보존했다.
 - 자동검증 결과: Vitest 41 files / 552 tests 통과. V8 coverage statements 98.60% / branches 97.05% / functions 98.16% / lines 98.58%.
 - 빌드 결과: Vite 120 modules, 초기 JS 191.22 KiB(62.53 KiB gzip), 최대 lazy `vendor-three` 172.47 KiB gzip, 전체 JS 298.66 KiB gzip으로 초기·lazy·전체 자동 예산을 통과했다.
 - Lighthouse 결과: 로컬 desktop/mobile LCP 244/904ms, 배포 desktop/mobile LCP 412/2883ms. 배포 desktop performance/accessibility 100/100, mobile 80/100으로 LCP 3초 게이트를 통과했다.
 - 배포 결과: GitHub Actions 품질 게이트와 Pages artifact/deploy가 성공했다. 공개 URL은 https://jtech-co.github.io/Moth-in-the-Machine/ 이며 HTML·JS·CSS·favicon HTTP 200을 확인했다.
 - 수동검증 결과(2026-08-21): 사용자가 공개 사이트에서 AUTO/LOW SPEC 전환, 새로고침 뒤 설정 유지, AUTO 약 60fps, LOW SPEC 30fps 이상, LOW SPEC NORMAL/HARD 경로 식별, 이미지 복사와 PNG 다운로드 정상 동작을 확인했다.
 - 선택 사운드: 필수 DoD가 아니므로 신규 asset·autoplay·성능 위험을 늘리지 않는 경량 릴리스에서 제외하고 후속 후보로 유지한다.
-- 현재 진행 메모(2026-08-21): M9 DoD 완료. M1–M9 하네스의 마지막 정식 마일스톤을 통과했으며 최종 커밋·푸시 승인.
+- 현재 진행 메모(2026-08-21): M9 DoD 완료. M1~M9 하네스의 마지막 정식 마일스톤을 통과했으며 최종 커밋·푸시 승인.
 
 ---
 

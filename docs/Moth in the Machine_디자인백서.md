@@ -46,7 +46,7 @@
 - **품질 선택 (Quality Choice)**: 메인 푸터의 `QUALITY · AUTO / ADAPTIVE | LOW SPEC` 버튼은 현재 모드를 직접 표시하고 `aria-pressed`와 구체적인 레이블을 제공한다. LOW SPEC은 장식 밀도와 렌더 비용만 줄이며 HUD·목표·위험·핵심 회랑 조명은 유지한다.
 
 ### 2.3. 데이터 구조 및 모듈 (Component Structure)
-1.  **헤더 (Header)**: 상단 고정 바 – 좌측 스테이지명, 중앙 10세그먼트 체력 바, 우측 타이머. 체력은 숫자 HP와 semantic meter를 병행하고 시간은 `MM:SS.t` 계기 형식으로 표시
+1.  **헤더 (Header)**: 상단 고정 바: 좌측 스테이지명, 중앙 10세그먼트 체력 바, 우측 타이머. 체력은 숫자 HP와 semantic meter를 병행하고 시간은 `MM:SS.t` 계기 형식으로 표시
 2.  **네비게이션 (Nav)**: 메인에서는 난이도 카드와 개별 단계 카드를 계층적으로 표시하고 잠금·완료·최고 기록을 구분한다. 단계 카드는 연번·제목 / 목표 / 별·BEST 기록 / START FLIGHT를 4단 grid로 구성해 넓은 카드에서도 정보가 흩어지지 않게 한다. 카드 전체를 하나의 버튼으로 유지하고 가시적 focus와 단계명·목표·완료 기록·시작 의도를 포함한 `aria-label`을 제공한다. 인게임 미니맵은 플레이어와 목표 방향, 목표 표면, ASCEND·DESCEND·LEVEL 고도를 함께 표시하며 일시정지는 중앙 모달로 처리한다.
 3.  **콘텐츠 영역 (Content)**: 전체 화면 3D 뷰포트. HUD는 반투명 금속 패널 스타일 오버레이
 4.  **푸터 (Footer)**: 메뉴에서는 영속 `QUALITY` 토글, 인게임에서는 컨트롤 힌트(설정에서 숨김 가능), 결과 화면에서는 공유 버튼 영역을 제공한다.
@@ -75,10 +75,10 @@
 ## 4. 아키텍처 및 로직 (Architecture & Logic)
 
 ### 4.1. 시각적 계층 구조 (Visual Hierarchy)
-- **Level 1 (Page Title)**: 28–32px, Bold, 크림 아이보리 (`#e8e4d9`)
-- **Level 2 (Section Title)**: 20–22px, SemiBold, 호박색 강조 (`#f0c14b`)
+- **Level 1 (Page Title)**: 28~32px, Bold, 크림 아이보리 (`#e8e4d9`)
+- **Level 2 (Section Title)**: 20~22px, SemiBold, 호박색 강조 (`#f0c14b`)
 - **Level 3 (Body Text)**: 16px, Regular, 라인하이트 1.5
-- **Level 4 (Meta/Caption)**: 13–14px, Regular, 연한 그레이 (`#a8a49a`)
+- **Level 4 (Meta/Caption)**: 13~14px, Regular, 연한 그레이 (`#a8a49a`)
 
 ```css
 /* 스타일 적용 예시 코드 */
@@ -94,7 +94,7 @@
 ### 4.2. 반응형 로직 (Responsive Logic)
 1.  **Desktop (Default)**: 전체 화면 3D + 고정 HUD 오버레이
 2.  **Transition Point**: 1024px (태블릿), 768px (모바일)
-3.  **Mobile View**: 320–768px에서 HUD 요소를 재배치·축소하고 미니맵을 우측에 유지하며, 조작 힌트와 계기판이 겹치거나 가로 스크롤을 만들지 않게 한다. 가상 조이스틱은 후속 터치 입력 범위로 남긴다.
+3.  **Mobile View**: 320~768px에서 HUD 요소를 재배치·축소하고 미니맵을 우측에 유지하며, 조작 힌트와 계기판이 겹치거나 가로 스크롤을 만들지 않게 한다. 가상 조이스틱은 후속 터치 입력 범위로 남긴다.
 
 ### 4.3. 핵심 컴포넌트 로직 (Core Components)
 - **HealthBar**: 10개 진공관 세그먼트 인디케이터 스타일. 숫자 HP와 semantic meter를 병행하고 깎일 때 화면 가장자리 붉은 오버레이 + 바 흔들림을 표시

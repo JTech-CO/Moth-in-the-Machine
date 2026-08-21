@@ -2,7 +2,7 @@
 
 ## 현재 phase
 
-M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 사용자 수동 게이트 통과)
+M9: 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 사용자 수동 게이트 통과)
 
 ## 직전에 끝낸 것
 
@@ -13,12 +13,12 @@ M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 
 - 캐비닛 10개, 릴레이 본체·접점 각 300개, 레일 20개를 instanced mesh로 구성
 - #f0c14b 호박색 진공관 포인트 라이트, 크림색 환경광, 안개를 디자인 토큰에 연결
 - 가로 회랑 뷰와 세로 릴레이 랙 뷰를 전환하는 aspect-aware 카메라 리그 구현
-- 2.5초 FPS 표본을 DPR 1.0–1.5에 직접 연결한 적응형 성능 제어 구현
+- 2.5초 FPS 표본을 DPR 1.0~1.5에 직접 연결한 적응형 성능 제어 구현
 - 3D 청크 로딩 전에도 프로젝트 제목이 초기 HTML에 남도록 LCP 안전 로딩 구조 구현
 - 초기 HTML, Canvas props, WebGL fallback/ready, DPR 상한을 검증하는 SSR 계약 테스트 추가
-- 사용자 브라우저에서 3D 씬, 콘솔 오류 없음, 50–60fps 유지, 전체 화면 리사이즈 정상 확인
+- 사용자 브라우저에서 3D 씬, 콘솔 오류 없음, 50~60fps 유지, 전체 화면 리사이즈 정상 확인
 - 설명문 readout을 27rem에서 29rem으로 넓혀 마지막 글자만 고립되던 줄바꿈 수정
-- M4 완료 커밋을 원격 브랜치에 푸시하고 Draft PR #1을 M1–M4 범위로 갱신
+- M4 완료 커밋을 원격 브랜치에 푸시하고 Draft PR #1을 M1~M4 범위로 갱신
 - primitive만 사용한 유기적 나방 메시와 delta 기반 날개·bank·착륙 준비 자세 구현
 - Canvas 포인터 잠금, WASD·화살표, 마우스 yaw/pitch, Space edge 토글 입력 훅 구현
 - 1/120초 fixed-step, 프레임 delta 0.1초·8 substep 상한의 3D 속도·관성 물리 구현
@@ -57,7 +57,7 @@ M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 
 - store의 `paused` 상태와 pause/resume 액션을 추가하고 P·Escape·문서 비가시화·획득 후 pointer lock 상실을 일시정지 경계로 연결
 - 10세그먼트 semantic HealthBar, 목표 방향·표면·고도를 표시하는 Minimap, live/terminal StarDisplay, elapsed Timer, 피해량 기반 가장자리 pulse 구현
 - React Portal 기반 일시정지 Modal에 초기 focus·Tab/Shift+Tab focus trap·focus 복귀와 Continue·Restart·Return 키보드 동작 구현
-- 1947 Mark II 금속·베이클라이트 스타일, 비차단 HUD pointer-events, `showControlHints`, forced-colors, reduced-motion, 320–768px 반응형 계약 반영
+- 1947 Mark II 금속·베이클라이트 스타일, 비차단 HUD pointer-events, `showControlHints`, forced-colors, reduced-motion, 320~768px 반응형 계약 반영
 - M6 clear/fail 중앙 결과 안내는 M8 정식 결과 화면 전까지 유지
 - 첫 사용자 실플레이에서 Drei Html transformed 0×0 wrapper 아래 `position: fixed` GameHud·DamageOverlay가 0×0 containing block으로 붕괴·clip되어 HUD 전체가 보이지 않는 회귀 확인
 - GameHud root와 DamageOverlay를 Html 표면 기준 `position: absolute` full surface로 바꾸고, world origin의 behind-camera 숨김을 피하도록 Html anchor를 camera-forward 위치로 이동
@@ -76,7 +76,7 @@ M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 
 - 결과 화면·공유 텍스트·clipboard 폴백·PNG 다운로드가 동일한 불변 presentation을 사용하는 종단 계약 보강
 - 공유 텍스트에 정식 GitHub Pages URL을 포함해 결과 공유 뒤 게임으로 다시 유입되는 경로 연결
 - `renderQuality: auto | low`를 하위 호환 LocalStorage 설정으로 추가하고 메뉴 `QUALITY` 버튼과 즉시 저장 연결
-- LOW SPEC에서 DPR 0.75–1.0, antialias 비활성화, 장식·동적광 감축과 28–32fps 적응 범위를 적용하면서 NORMAL/HARD 핵심 조명 유지
+- LOW SPEC에서 DPR 0.75~~1.0, antialias 비활성화, 장식·동적광 감축과 28~~32fps 적응 범위를 적용하면서 NORMAL/HARD 핵심 조명 유지
 - 초기 HTML boot shell, GitHub Pages base 경로, vendor 코드 분할, 초기·lazy·전체 gzip 번들 예산 자동 게이트 구현
 - GitHub Actions가 lint·TypeScript·모듈 경계·coverage·Pages build·번들 예산 통과 뒤 정적 사이트를 배포하도록 구성
 - 선택 사운드는 필수 완료 조건이 아니며 무에셋 경량 릴리스의 성능·자동재생 안정성을 위해 후속 후보로 보존
@@ -84,7 +84,7 @@ M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 
 
 ## 다음 할 일
 
-1. M1–M9 정식 하네스 마일스톤 완료 상태 유지
+1. M1~M9 정식 하네스 마일스톤 완료 상태 유지
 2. 공개 배포 URL과 브라우저 회귀를 모니터링하고 필요 시 수정 릴리스
 3. 별도 승인을 받을 경우 터치 입력·선택 사운드·리더보드를 후속 범위로 계획
 
@@ -109,7 +109,7 @@ M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 
 - 실제 WebGL 씬·콘솔·Performance·리사이즈 수동 검수: 사용자 확인으로 통과
   - 3D 릴레이 회랑 정상 표시
   - 콘솔 오류 없음
-  - 화면 크기 변경 중 50–60fps 유지
+  - 화면 크기 변경 중 50~60fps 유지
   - 리사이즈 정상
 - M5 실제 조작·시각 수동 검수: 사용자 확인으로 통과
   - 포인터 잠금과 WASD·화살표 이동·관성 정상
@@ -164,7 +164,7 @@ M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 
 ## 현재 제약
 
 - raw `vendor-three` 청크의 500 kB 초과 Vite 경고는 남아 있으나 초기·lazy·전체 gzip 자동 예산과 배포 LCP 3초 게이트로 통제
-- M1–M9 정식 하네스 마일스톤 완료
+- M1~M9 정식 하네스 마일스톤 완료
 
 ## 미결 질문
 
@@ -192,9 +192,9 @@ M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 
 | 2026-08-11 | 사용자 브라우저·콘솔 검수 확인으로 M3 게이트 완료                         | LocalStorage 저장·새로고침 복원·손상 데이터 fallback의 수동 DoD 충족                        |
 | 2026-08-11 | Three 0.170.0 / Fiber 8.18.0 / Drei 9.122.0을 정확히 고정                 | React 18과 기술 백서 r170+/Fiber 8 요구를 충족하고 중복 Three를 방지                        |
 | 2026-08-11 | M4 씬은 하나의 lazy Canvas와 primitive·instancing만 사용                  | 초기 HTML LCP를 지키면서 glTF 없이 회랑 밀도와 데스크톱 성능을 확보                         |
-| 2026-08-11 | Drei PerformanceMonitor를 숫자 DPR 상태 1.0–1.5에 직접 연결               | AdaptiveDpr 단독 사용의 무효 경로와 리사이즈 시 DPR 되돌림을 방지                           |
+| 2026-08-11 | Drei PerformanceMonitor를 숫자 DPR 상태 1.0~1.5에 직접 연결               | AdaptiveDpr 단독 사용의 무효 경로와 리사이즈 시 DPR 되돌림을 방지                           |
 | 2026-08-11 | 핵심 Canvas 경계는 SSR 계약 테스트, 실제 WebGL·FPS는 브라우저로 분리      | 단위 테스트 수치를 과장하지 않고 플랫폼 경계를 실제 환경에서 검증                           |
-| 2026-08-11 | 사용자 브라우저 검수로 M4 게이트 완료                                     | 3D 표시·콘솔·50–60fps·리사이즈 DoD를 실제 환경에서 충족                                     |
+| 2026-08-11 | 사용자 브라우저 검수로 M4 게이트 완료                                     | 3D 표시·콘솔·50~60fps·리사이즈 DoD를 실제 환경에서 충족                                     |
 | 2026-08-11 | readout과 설명문 폭을 29rem으로 확장                                      | 마지막 글자 고립 줄바꿈을 제거하면서 모바일 숨김과 상태 패널 구도를 유지                    |
 | 2026-08-11 | Space는 로컬 hover ↔ landing-ready edge 토글로 고정                       | M5 준비 자세·제어 하강을 M6 terminal isLanded·성공 판정과 분리                              |
 | 2026-08-11 | 프레임 물리는 로컬 ref와 1/120초 fixed-step으로 유지                      | React/store 60fps 갱신 없이 delta 독립 관성·카메라와 유한값 불변식 보장                     |

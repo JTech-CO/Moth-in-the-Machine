@@ -76,7 +76,7 @@
 
 ### 4.1. 상태 관리 전략 (State Management)
 애플리케이션의 데이터 흐름과 상태 관리 방식을 정의합니다.
-- **Scope**: 전역(Global) – 진행 상황·설정·현재 스테이지 / 지역(Local) – 프레임 단위 물리·카메라
+- **Scope**: 전역(Global): 진행 상황·설정·현재 스테이지 / 지역(Local): 프레임 단위 물리·카메라
 - **Tool**: Zustand Store + Custom Hooks
 - **Persistence**: 진행도와 `showControlHints`·`renderQuality`만 `mothProgress` schema v1에 저장한다. 구 레코드의 품질 필드 누락은 `auto`로 정규화하고 세션 물리·타이머·결과는 복원하지 않는다.
 
@@ -119,7 +119,7 @@ const useGameStore = create((set, get) => ({
 - **HARD 6**: 바닥·천장 데크, 좌우 게이트와 중앙 코어가 교차하는 logic-labyrinth를 사용한다. 고도와 방향을 함께 바꾸는 경로 선택을 강제한다.
 - NORMAL과 HARD는 바닥 외에도 천장·좌우 벽 목표를 사용한다. 목표 메시의 방향과 물리 법선은 같은 canonical target 정의에서 파생한다.
 - **가시성·성능**: switching-gallery와 logic-labyrinth에는 은은한 분산 보조 조명을 배치해 경로·장애물·목표 접근면의 최소 가시성을 보장한다. LOW SPEC도 각 회랑의 시작·중간·끝 핵심 조명을 보존하며 그림자는 생성하지 않는다.
-- **품질 정책**: AUTO는 DPR 1.0–1.5와 57–61fps 적응 범위, LOW SPEC은 DPR 0.75–1.0·antialias 비활성화·28–32fps 적응 범위와 축소된 장식·동적광을 사용한다. HUD·목표·위험 판정과 게임 규칙은 동일하다.
+- **품질 정책**: AUTO는 DPR 1.0~1.5와 57~61fps 적응 범위, LOW SPEC은 DPR 0.75~1.0·antialias 비활성화·28~32fps 적응 범위와 축소된 장식·동적광을 사용한다. HUD·목표·위험 판정과 게임 규칙은 동일하다.
 - 나방은 몸통·앞날개·뒷날개·더듬이·다리의 실루엣을 분리한 primitive 모델을 사용한다. 전선·스파크·과열 릴레이·진공관 장애물 역시 역할과 충돌 범위를 읽을 수 있는 primitive 조합으로 표현한다.
 
 ## 5. UI 구현 가이드 (Implementation Guide)
