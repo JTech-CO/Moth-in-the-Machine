@@ -1,0 +1,104 @@
+.backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  pointer-events: auto;
+  cursor: default;
+  background: rgba(4, 6, 10, 0.78);
+  backdrop-filter: blur(6px);
+}
+
+.panel {
+  position: relative;
+  width: min(100%, 29rem);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  border: 1px solid rgba(240, 193, 75, 0.58);
+  border-left: 4px solid var(--accent-amber);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  color: var(--text-cream);
+  background:
+    linear-gradient(145deg, rgba(42, 52, 57, 0.98), rgba(10, 14, 23, 0.98)), var(--panel-metal);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.72),
+    inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.md {
+  width: min(100%, 29rem);
+}
+
+.lg {
+  width: min(100%, 68rem);
+}
+
+.panel:focus {
+  outline: none;
+}
+
+.panel::after {
+  position: absolute;
+  inset: 0.45rem;
+  border: 1px solid rgba(240, 193, 75, 0.08);
+  pointer-events: none;
+  content: '';
+}
+
+.plateCode {
+  color: var(--accent-amber);
+  font-family: var(--font-typewriter);
+  font-size: 0.6rem;
+  letter-spacing: 0.13em;
+}
+
+.panel h2 {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-ui);
+  font-size: clamp(1.55rem, 5vw, 2.2rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.description {
+  margin-top: 0.7rem;
+  color: rgba(232, 228, 217, 0.78);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.content {
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 480px) {
+  .backdrop {
+    align-items: end;
+    padding: 0.65rem;
+  }
+
+  .panel,
+  .md,
+  .lg {
+    width: 100%;
+    max-height: calc(100dvh - 1.3rem);
+    padding: 1.15rem;
+  }
+}
+
+@media (forced-colors: active) {
+  .backdrop {
+    background: Canvas;
+  }
+
+  .panel {
+    border-color: CanvasText;
+    color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+}

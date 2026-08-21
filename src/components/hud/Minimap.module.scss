@@ -1,0 +1,134 @@
+.root {
+  width: min(11.5rem, 28vw);
+  min-width: 8.25rem;
+  margin: 0;
+  border: 1px solid rgba(240, 193, 75, 0.28);
+  padding: 0.58rem;
+  color: var(--text-cream);
+  background:
+    linear-gradient(145deg, rgba(42, 52, 57, 0.82), rgba(10, 14, 23, 0.86)), var(--panel-metal);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(4px);
+}
+
+.root figcaption,
+.readout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  font-family: var(--font-typewriter);
+  letter-spacing: 0.08em;
+}
+
+.root figcaption span {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.52rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.root figcaption strong {
+  border: 1px solid rgba(240, 193, 75, 0.42);
+  padding: 0.2rem 0.3rem;
+  color: var(--accent-amber);
+  font-size: 0.5rem;
+}
+
+.plot {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.45;
+  margin-top: 0.45rem;
+  border: 1px solid rgba(168, 164, 154, 0.14);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(240, 193, 75, 0.06), transparent 58%),
+    rgba(4, 6, 10, 0.66);
+}
+
+.grid {
+  fill: none;
+  stroke: rgba(168, 164, 154, 0.12);
+  stroke-width: 0.6;
+}
+
+.route {
+  stroke: rgba(240, 193, 75, 0.42);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.target,
+.targetCore {
+  fill: none;
+  stroke: var(--accent-amber);
+  stroke-width: 1.7;
+}
+
+.targetCore {
+  fill: var(--accent-amber);
+  stroke-width: 0;
+}
+
+.player {
+  fill: var(--text-cream);
+  stroke: var(--bg-dark);
+  stroke-width: 1;
+}
+
+.readout {
+  margin-top: 0.4rem;
+  font-size: 0.5rem;
+}
+
+.readout span {
+  color: var(--text-muted);
+}
+
+.readout strong {
+  color: var(--accent-amber);
+}
+
+@media (max-width: 767px) {
+  .root {
+    width: 8.25rem;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .root {
+    width: 7.25rem;
+    padding: 0.42rem;
+  }
+
+  .root figcaption span,
+  .readout span {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .root,
+  .plot {
+    border-color: CanvasText;
+    color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+
+  .target,
+  .targetCore,
+  .route,
+  .player {
+    stroke: CanvasText;
+  }
+
+  .targetCore,
+  .player {
+    fill: CanvasText;
+  }
+}

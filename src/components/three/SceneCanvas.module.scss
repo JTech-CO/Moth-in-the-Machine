@@ -1,0 +1,69 @@
+.viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-dark);
+}
+
+.viewport > div,
+.viewport canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.fallback {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(240, 193, 75, 0.08), transparent 40%), var(--bg-dark);
+}
+
+.fallbackPanel {
+  width: min(100%, 34rem);
+  border: 1px solid rgba(240, 193, 75, 0.38);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  color: var(--text-cream);
+  background: linear-gradient(145deg, rgba(42, 52, 57, 0.96), rgba(18, 24, 28, 0.98));
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.55),
+    inset 0 1px rgba(255, 255, 255, 0.08);
+  font-family: var(--font-ui);
+}
+
+.fallbackPanel strong {
+  display: block;
+  margin-top: 0.8rem;
+  font-family: var(--font-typewriter);
+  font-size: clamp(1.35rem, 4vw, 2rem);
+}
+
+.fallbackPanel p {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.fallbackCode {
+  color: var(--accent-amber);
+  font-family: var(--font-typewriter);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
