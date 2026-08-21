@@ -1,8 +1,9 @@
-# Moth in the Machine — Claude Code 작업 하네스 (Harness)
+# Moth in the Machine — 작업 하네스 (Harness)
 
-**버전**: 0.1  
+**버전**: 0.2\
 **작성일**: 2026년 8월 1일  
-**관계 문서**: 루트 `CLAUDE.md`(전역 규칙·불변식), `PROGRESS.md`(상태 인계), `docs/` 하위 백서(기술 백서 v1.0, 디자인 백서 v1.0, 파일트리)
+**개정일**: 2026년 8월 21일\
+**관계 문서**: 루트 `CLAUDE.md`(전역 규칙·불변식), `PROGRESS.md`(상태 인계), `docs/` 하위 백서(기술 백서 v1.2, 디자인 백서 v1.3, 파일트리)
 
 > 이 문서는 **"무엇을 만드는가"(백서)가 아니라 "어떻게 진행·검증·복구하는가"(운영 규율)** 를 정의한다. 각 phase의 "완료"는 코드가 도는 것이 아니라 **측정 가능한 게이트(DoD) 통과**다. 복잡한 시스템일수록 "에러 없이 도는데 기능은 사실상 안 됨"이 흔하므로, 게이트로 막지 않으면 잘못된 완료 판정이 다음 phase로 전파된다.
 
@@ -138,18 +139,28 @@ M1 → M2 → M3 → M4 → M5 → M6 → M7 → M8 → M9.
 - 자동검증 결과(2026-08-14): Node.js 24에서 lint·TypeScript·import boundary, Vitest 33 files / 496 tests 통과. V8 overall coverage statements 98.58% / branches 96.94% / functions 98.12% / lines 98.55%.
 - production build 결과: Vite 118 modules, 초기 index 194.62 kB(63.63 kB gzip), lazy SceneCanvas 891.35 kB(242.63 kB gzip). 기존 500 kB 초과 warning만 유지.
 - 수동검증 결과(2026-08-14): 사용자 실제 브라우저에서 다운로드 PNG 1080×1080 해상도·크림 로그북 시각, clipboard 이미지/텍스트 붙여넣기, clear/fail terminal 입력과 반응형 동작이 모두 정상임을 확인했다.
-- 현재 진행 메모(2026-08-14): M8 DoD 완료 및 커밋·푸시 승인. 다음 작업은 M9 통합·폴리시·배포이며 아직 시작하지 않았다.
+- M8 완료 메모(2026-08-14): 실제 브라우저 공유 게이트 통과로 M8 DoD를 완료하고 커밋·푸시했다.
 
 ### M9 — 통합·폴리시·배포
 - 진입조건: M8 게이트 통과.
-- 할 일: 전체 플로우 통합 테스트 → 사운드(선택) → 저사양 옵션 → 빌드 최적화 → GitHub Pages 또는 Cloudflare Pages 배포.
-- 참조: 기술 백서 §7 / 디자인 백서 §7
+- 할 일: 전체 플로우 통합 테스트 → 저사양 옵션 → 빌드 최적화 → GitHub Pages 배포. 사운드는 선택 항목으로 분리한다.
+- 참조: 기술 백서 §5.6·§7 / 디자인 백서 §4.3·§7
 - DoD:
-  1. `pnpm build` 성공 + preview에서 전체 스테이지 클리어 가능.
-  2. LCP 3초 이내, 데스크톱 60fps 유지 (저사양 모드 시 30fps 이상).
-  3. 배포 URL에서 새로고침 없이 즉시 플레이 가능 + 공유 이미지 정상 동작.
-- 검증: `pnpm build && pnpm preview` + Lighthouse + 실제 배포 URL 수동 테스트.
+  1. `pnpm verify`·`pnpm build:pages` 성공 + 19단계 모두에 구조물·위험을 피하는 경로와 실제 표면 착륙 접근점 존재.
+  2. LCP 3초 이내, AUTO 데스크톱 약 60fps 유지, LOW SPEC 30fps 이상 및 NORMAL/HARD 경로 가시성 유지.
+  3. 배포 URL에서 새로고침 없이 즉시 플레이 가능하고 품질 설정 영속화·공유 이미지 복사·PNG 다운로드 정상 동작.
+- 검증: 전체 자동 게이트 + 로컬·배포 Lighthouse + 실제 GitHub Pages URL 수동 테스트.
 - 주의: 시크릿·대용량 바이너리 커밋 금지. 환경변수는 빌드 타임에만 사용.
+- 구현 결과(2026-08-21): 실패→재시도→19단계 전체 클리어→난이도 해금→매 클리어 저장→메뉴 복귀→새 store 복원과 결과·공유 parity를 하나의 종단 통합 테스트로 연결했다.
+- 도달성 결과: 모든 단계에서 구조물, 전선, 스파크, 진공관, 과열 릴레이 전체 범위를 피하는 spawn→목표 접근 경로와 floor·ceiling·left-wall·right-wall fixed-step 착륙을 38개 계약으로 검증했다.
+- 저사양 결과: 영속 `renderQuality: auto | low` 설정, LOW SPEC DPR 0.75–1.0·antialias 비활성화·장식/동적광 감축·28–32fps 적응 범위를 구현하고 NORMAL/HARD 핵심 조명을 보존했다.
+- 자동검증 결과: Vitest 41 files / 552 tests 통과. V8 coverage statements 98.60% / branches 97.05% / functions 98.16% / lines 98.58%.
+- 빌드 결과: Vite 120 modules, 초기 JS 191.22 KiB(62.53 KiB gzip), 최대 lazy `vendor-three` 172.47 KiB gzip, 전체 JS 298.66 KiB gzip으로 초기·lazy·전체 자동 예산을 통과했다.
+- Lighthouse 결과: 로컬 desktop/mobile LCP 244/904ms, 배포 desktop/mobile LCP 412/2883ms. 배포 desktop performance/accessibility 100/100, mobile 80/100으로 LCP 3초 게이트를 통과했다.
+- 배포 결과: GitHub Actions 품질 게이트와 Pages artifact/deploy가 성공했다. 공개 URL은 https://jtech-co.github.io/Moth-in-the-Machine/ 이며 HTML·JS·CSS·favicon HTTP 200을 확인했다.
+- 수동검증 결과(2026-08-21): 사용자가 공개 사이트에서 AUTO/LOW SPEC 전환, 새로고침 뒤 설정 유지, AUTO 약 60fps, LOW SPEC 30fps 이상, LOW SPEC NORMAL/HARD 경로 식별, 이미지 복사와 PNG 다운로드 정상 동작을 확인했다.
+- 선택 사운드: 필수 DoD가 아니므로 신규 asset·autoplay·성능 위험을 늘리지 않는 경량 릴리스에서 제외하고 후속 후보로 유지한다.
+- 현재 진행 메모(2026-08-21): M9 DoD 완료. M1–M9 하네스의 마지막 정식 마일스톤을 통과했으며 최종 커밋·푸시 승인.
 
 ---
 

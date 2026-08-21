@@ -1,8 +1,8 @@
 # Moth in the Machine 기술 백서 (Technical Whitepaper)
 
-**버전**: 1.1\
+**버전**: 1.2\
 **작성일**: 2026년 7월 31일  
-**개정일**: 2026년 8월 14일\
+**개정일**: 2026년 8월 21일\
 **참고 문서**: 기획서 v1.0, UI/UX 레이아웃 문서 v1.0
 
 ## 1. 프로젝트 개요 (Project Overview)
@@ -23,12 +23,12 @@
 ## 2. 상세 기능 요구사항 (Detailed Requirements)
 
 ### 2.1. 시스템 환경 및 인터페이스 (System & Interface)
-- **뷰 모드 (View Mode)**: Desktop First + Fluid Layout (최소 지원 해상도 1280×720, 모바일은 가상 조이스틱 + 터치 카메라 지원)
+- **뷰 모드 (View Mode)**: Desktop First + Fluid Layout (키보드·마우스 비행 우선, 320px 이상 반응형 UI; 터치 비행은 후속 범위)
 - **테마 정책 (Theme Policy)**: CSS Variables 기반 다크 테마 고정 (컴퓨터 내부 분위기 유지). 라이트 모드 미지원.
 
 ### 2.2. 사용자 상호작용 로직 (Interaction Logic)
 - **이벤트 처리 (Event Handling)**:
-  - **Input**: Keyboard (WASD/화살표 + Space, T 시점 전환), Mouse (시야 회전), Touch (가상 조이스틱 + 드래그)
+  - **Input**: Keyboard (WASD/화살표 + Space, T 시점 전환), Mouse (시야 회전). Touch 가상 조이스틱·드래그는 후속 범위
   - **Action**: 바닥·천장·좌우 벽의 목표 면에 착지 시 자동 판정 → 체력/시간 계산 → 정식 Portal 결과 모달. terminal 진입 즉시 Canvas pointer lock을 해제하고 커서를 복원하며, 결과 모달이 Enter의 선택 난이도 단계 목록 복귀와 R의 현재 단계 재시작을 소유한다. 장애물 충돌 시 실시간 체력 감소 + 비주얼 피드백(화면 가장자리 붉은 오버레이)
 - **데이터 검증 (Validation)**: 클라이언트 사이드에서 체력 0 이하, 목표 면의 접선 방향 반경(0.5 unit), 안쪽 법선 방향 접근과 swept contact를 검증. 서버 검증 불필요(오프라인 우선).
 
@@ -39,13 +39,16 @@
 3.  **Result**: stageId(Number), time(Number), remainingHealth(Number), stars(Number), timestamp(Date)
 4.  **Progress**: completedStages(Array<Stage>), totalStars(Number) → LocalStorage에 직렬화 저장
 5.  **Campaign**: 조작 튜토리얼 1개 + EASY 6개 + NORMAL 6개 + HARD 6개 = 총 19단계. ID는 데이터 카탈로그의 안정적인 정렬·참조 키이며, 런타임은 전역 순차 진행 대신 난이도 선택 → 해당 난이도의 개별 단계 선택 흐름을 사용한다.
+6.  **Settings**: showControlHints(Boolean), renderQuality(auto | low). schema v1 레코드에 하위 호환으로 저장하며 필드가 없으면 auto로 복원한다.
 
 ### 2.4. 출력 및 성능 기준 (Output & Performance)
 - **결과물 형식**: Canvas 기반 PNG Blob (1080×1080 정사각 공유 이미지), LocalStorage 저장, 클립보드 복사
 - **품질 기준 (QA Standards)**:
   - 초기 로딩 시간(LCP): 3초 이내 (3D 에셋 압축 + Lazy Loading)
-  - 프레임레이트: 데스크톱 60fps 유지, 모바일 30fps 이상
+  - 프레임레이트: AUTO 데스크톱 약 60fps, LOW SPEC 30fps 이상
   - 브라우저 호환성: Chrome, Safari, Edge, Firefox 최신 2개 버전 (IE 미지원)
+  - 번들 예산: 초기 JS 240 KiB/75 KiB gzip 이하, 최대 lazy JS 260 KiB gzip 이하, 전체 JS 340 KiB gzip 이하
+  - Lighthouse 보고서는 요청 URL·최종 URL·HTTP 상태와 LCP 3000ms 이하를 자동 검사
 
 ## 3. 기술 스택 및 라이브러리 (Tech Stack)
 
@@ -75,6 +78,7 @@
 애플리케이션의 데이터 흐름과 상태 관리 방식을 정의합니다.
 - **Scope**: 전역(Global) – 진행 상황·설정·현재 스테이지 / 지역(Local) – 프레임 단위 물리·카메라
 - **Tool**: Zustand Store + Custom Hooks
+- **Persistence**: 진행도와 `showControlHints`·`renderQuality`만 `mothProgress` schema v1에 저장한다. 구 레코드의 품질 필드 누락은 `auto`로 정규화하고 세션 물리·타이머·결과는 복원하지 않는다.
 
 ```typescript
 // 상태 관리 스키마 예시
@@ -114,7 +118,8 @@ const useGameStore = create((set, get) => ({
 - **NORMAL 6**: 교차 게이트와 천장 버스가 있는 switching-gallery를 사용한다. 구조물과 장애물의 간격이 직선 비행을 차단해 좌우 경로 판단을 요구한다.
 - **HARD 6**: 바닥·천장 데크, 좌우 게이트와 중앙 코어가 교차하는 logic-labyrinth를 사용한다. 고도와 방향을 함께 바꾸는 경로 선택을 강제한다.
 - NORMAL과 HARD는 바닥 외에도 천장·좌우 벽 목표를 사용한다. 목표 메시의 방향과 물리 법선은 같은 canonical target 정의에서 파생한다.
-- **가시성·성능**: switching-gallery와 logic-labyrinth에는 은은한 분산 보조 조명을 배치해 경로·장애물·목표 접근면의 최소 가시성을 보장한다. 보조 조명은 그림자를 생성하지 않고 저비용 광원 수와 기존 적응형 DPR 정책 안에서 운용해 데스크톱 60fps 성능 예산을 유지한다.
+- **가시성·성능**: switching-gallery와 logic-labyrinth에는 은은한 분산 보조 조명을 배치해 경로·장애물·목표 접근면의 최소 가시성을 보장한다. LOW SPEC도 각 회랑의 시작·중간·끝 핵심 조명을 보존하며 그림자는 생성하지 않는다.
+- **품질 정책**: AUTO는 DPR 1.0–1.5와 57–61fps 적응 범위, LOW SPEC은 DPR 0.75–1.0·antialias 비활성화·28–32fps 적응 범위와 축소된 장식·동적광을 사용한다. HUD·목표·위험 판정과 게임 규칙은 동일하다.
 - 나방은 몸통·앞날개·뒷날개·더듬이·다리의 실루엣을 분리한 primitive 모델을 사용한다. 전선·스파크·과열 릴레이·진공관 장애물 역시 역할과 충돌 범위를 읽을 수 있는 primitive 조합으로 표현한다.
 
 ## 5. UI 구현 가이드 (Implementation Guide)
@@ -155,7 +160,18 @@ const useGameStore = create((set, get) => ({
 - **접근성·반응형**: 키보드 focus-visible, forced-colors, reduced-motion, 좁은 화면의 단일 열 재배치와 가로 overflow 방지 계약을 적용한다.
 - **자동검증**: Node.js 24에서 lint·TypeScript·import boundary, Vitest 33 files / 496 tests 통과. V8 overall coverage statements 98.58% / branches 96.94% / functions 98.12% / lines 98.55%.
 - **Production build**: Vite 118 modules, 초기 index 194.62 kB(63.63 kB gzip), lazy SceneCanvas 891.35 kB(242.63 kB gzip). 기존 500 kB 초과 warning만 유지한다.
-- **게이트 상태**: 2026-08-14 사용자 실제 브라우저 검수에서 다운로드 PNG의 1080×1080 해상도·로그북 시각, clipboard 이미지/텍스트 붙여넣기, clear/fail terminal 입력과 반응형 동작이 모두 정상임을 확인했다. M8 DoD를 완료하고 커밋·푸시를 승인했으며, 다음 작업은 아직 시작하지 않은 M9 통합·폴리시·배포다.
+- **게이트 상태**: 2026-08-14 사용자 실제 브라우저 검수에서 다운로드 PNG의 1080×1080 해상도·로그북 시각, clipboard 이미지/텍스트 붙여넣기, clear/fail terminal 입력과 반응형 동작이 모두 정상임을 확인해 M8 DoD를 완료했다.
+
+### 5.6. M9 통합·성능·배포 상태
+- **통합 계약**: 치명 피해 실패·동일 단계 재시도·19단계 전체 클리어·난이도 해금·매 클리어 저장·메뉴 복귀·새 store 복원과 결과 presentation·공유 폴백을 하나의 종단 시나리오로 검증한다.
+- **도달성 계약**: 19단계 모두에서 구조물과 전선·스파크·진공관·과열 전체 범위를 피하는 spawn→목표 접근 경로를 탐색하고, floor·ceiling·left-wall·right-wall의 0.3 unit 안쪽 접근점에서 실제 1/120초 착륙 성공을 확인한다.
+- **품질 설정**: 메뉴 `QUALITY` 버튼의 AUTO/LOW SPEC 선택을 LocalStorage에 즉시 저장하며 새로고침 뒤 복원한다. LOW SPEC도 NORMAL/HARD 경로와 목표를 식별할 수 있는 조명을 유지한다.
+- **빌드 최적화**: 초기 HTML boot shell, lazy SceneCanvas, vendor 분할과 초기·lazy·전체 gzip 예산을 적용했다. 최종 build는 120 modules, 초기 JS 191.22 KiB(62.53 KiB gzip), 최대 lazy `vendor-three` 172.47 KiB gzip, 전체 JS 298.66 KiB gzip이다.
+- **자동검증**: Vitest 41 files / 552 tests 통과. V8 coverage statements 98.60% / branches 97.05% / functions 98.16% / lines 98.58%.
+- **Lighthouse**: 로컬 desktop/mobile LCP 244/904ms, 배포 desktop/mobile LCP 412/2883ms다. 배포 desktop performance/accessibility는 100/100, mobile은 80/100이며 LCP 3초 예산을 통과했다.
+- **배포**: GitHub Actions가 품질 게이트와 `/Moth-in-the-Machine/` base build 후 GitHub Pages에 배포한다. 공개 URL은 https://jtech-co.github.io/Moth-in-the-Machine/ 이다.
+- **사용자 게이트**: 2026-08-21 공개 URL에서 AUTO 약 60fps, LOW SPEC 30fps 이상, 품질 영속화, LOW SPEC NORMAL/HARD 가시성, 결과 이미지 복사와 PNG 다운로드를 확인했다.
+- **선택 사운드**: 완료 필수 조건이 아니므로 무에셋 경량 릴리스에서 제외하고 후속 후보로 유지한다.
 
 ## 6. 파일 구조 (File Structure)
 
@@ -194,5 +210,5 @@ moth-in-the-machine/
     - React.memo + useMemo로 HUD 리렌더링 최소화.
 3.  **이슈 대응 (Known Issues)**:
     - iOS Safari에서 100vh 문제 → `100dvh` 또는 visualViewport 대응.
-    - 저사양 기기에서 프레임 드롭 시 자동으로 그림자/포스트프로세싱 비활성화 옵션 제공.
-    - 터치 기기에서 카메라 드래그와 조이스틱 충돌 방지 위해 pointer-events 분리.
+    - 저사양 기기에서는 LOW SPEC으로 DPR·antialias·장식·동적광 비용을 줄이되 핵심 조명과 HUD를 유지한다.
+    - 터치 비행을 후속 구현할 때 카메라 드래그와 조이스틱 충돌을 막도록 pointer-events를 분리한다.

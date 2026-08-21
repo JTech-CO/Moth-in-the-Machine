@@ -2,7 +2,7 @@
 
 ## 현재 phase
 
-M8 — 결과 화면 & 공유 이미지 완료 (2026-08-14 실제 브라우저 수동 게이트 통과, 커밋·푸시 승인)
+M9 — 통합·성능·배포 완료 (2026-08-21 GitHub Pages 실제 배포 및 사용자 수동 게이트 통과)
 
 ## 직전에 끝낸 것
 
@@ -71,12 +71,22 @@ M8 — 결과 화면 & 공유 이미지 완료 (2026-08-14 실제 브라우저 �
 - 클릭 스택 내 `ClipboardItem` PNG 복사, 자동 텍스트 폴백과 항상 보이는 `COPY RESULT TEXT`, 다운로드 뒤 object URL 지연 revoke로 브라우저 호환 경계 보강
 - ResultScreen의 단계 복귀 초기 focus, 전역 R 재시작·비대화형 Enter 복귀·버튼 Enter 보존, Modal focus trap·backdrop/재생성 focus 유지·aria-live·focus-visible·forced-colors·reduced-motion·좁은 화면 재배치 적용
 - 2026-08-14 사용자 실제 브라우저 검수에서 1080×1080 다운로드 PNG·로그북 시각·클립보드 이미지/텍스트 붙여넣기·clear/fail 결과 입력·반응형 동작이 모두 정상임을 확인해 M8 수동 게이트 통과 및 커밋·푸시 승인
+- 치명 피해 실패 → 동일 튜토리얼 재시도 → 19단계 전체 클리어 → 난이도 해금 → 저장·메뉴 복귀·새 store 복원을 하나의 M9 통합 계약으로 검증
+- 19개 모든 단계에서 spawn부터 목표 접근점까지 구조물·전선·스파크·진공관·과열 범위를 피하는 경로와 실제 fixed-step 표면 착륙을 검증
+- 결과 화면·공유 텍스트·clipboard 폴백·PNG 다운로드가 동일한 불변 presentation을 사용하는 종단 계약 보강
+- 공유 텍스트에 정식 GitHub Pages URL을 포함해 결과 공유 뒤 게임으로 다시 유입되는 경로 연결
+- `renderQuality: auto | low`를 하위 호환 LocalStorage 설정으로 추가하고 메뉴 `QUALITY` 버튼과 즉시 저장 연결
+- LOW SPEC에서 DPR 0.75–1.0, antialias 비활성화, 장식·동적광 감축과 28–32fps 적응 범위를 적용하면서 NORMAL/HARD 핵심 조명 유지
+- 초기 HTML boot shell, GitHub Pages base 경로, vendor 코드 분할, 초기·lazy·전체 gzip 번들 예산 자동 게이트 구현
+- GitHub Actions가 lint·TypeScript·모듈 경계·coverage·Pages build·번들 예산 통과 뒤 정적 사이트를 배포하도록 구성
+- 선택 사운드는 필수 완료 조건이 아니며 무에셋 경량 릴리스의 성능·자동재생 안정성을 위해 후속 후보로 보존
+- 2026-08-21 공개 Pages에서 품질 전환·영속화·AUTO 약 60fps·LOW SPEC 30fps 이상·NORMAL/HARD 가시성·이미지 복사·PNG 다운로드 사용자 검수 통과
 
 ## 다음 할 일
 
-1. 승인된 M8 변경을 커밋·푸시해 원격 기준선을 확정
-2. M9 진입 시 전체 캠페인·결과·공유 플로우 통합 테스트 범위를 확정
-3. M9 저사양 옵션·번들/LCP 최적화·배포 게이트를 순서대로 진행 (M9 미착수)
+1. M1–M9 정식 하네스 마일스톤 완료 상태 유지
+2. 공개 배포 URL과 브라우저 회귀를 모니터링하고 필요 시 수정 릴리스
+3. 별도 승인을 받을 경우 터치 입력·선택 사운드·리더보드를 후속 범위로 계획
 
 ## 검증 결과
 
@@ -132,16 +142,33 @@ M8 — 결과 화면 & 공유 이미지 완료 (2026-08-14 실제 브라우저 �
   - V8 coverage: statements 98.58%, branches 96.94%, functions 98.12%, lines 98.55%
   - Vite production build: 118 modules, 초기 index 194.62 kB(63.63 kB gzip), lazy SceneCanvas 891.35 kB(242.63 kB gzip); 기존 500 kB 초과 warning만 유지
 - M8 사용자 실제 브라우저 수동 게이트(2026-08-14): 통과. 다운로드 PNG 1080×1080·로그북 시각·클립보드 이미지/텍스트 붙여넣기·clear/fail terminal 입력·반응형 동작 정상 확인
+- M9 최종 자동 검증(2026-08-21): 통과
+  - `pnpm format:check`, lint, TypeScript, import boundary, coverage, production build, 번들 예산 통과
+  - Vitest: 41 files / 552 tests 통과
+  - V8 coverage: statements 98.60%, branches 97.05%, functions 98.16%, lines 98.58%
+  - Vite production build: 120 modules
+  - 초기 JS 191.22 KiB(62.53 KiB gzip), 최대 lazy `vendor-three` 172.47 KiB gzip, 전체 JS 298.66 KiB gzip으로 자동 예산 통과
+  - `pnpm build:pages`와 `/Moth-in-the-Machine/` HTML·asset base 계약 통과
+  - 로컬 Lighthouse desktop: LCP 244ms, performance 100, accessibility 100
+  - 로컬 Lighthouse mobile: LCP 904ms, performance 100, accessibility 100
+  - 배포 Lighthouse desktop: LCP 412ms, performance 100, accessibility 100
+  - 배포 Lighthouse mobile: LCP 2883ms, performance 80, accessibility 100; LCP 3초 예산 통과
+  - GitHub Actions Pages build/deploy 성공 및 HTML·JS·CSS·favicon HTTP 200 확인
+- M9 사용자 실제 배포 수동 게이트(2026-08-21): 통과
+  - `QUALITY` 버튼으로 AUTO와 LOW SPEC 전환 및 새로고침 뒤 설정 유지
+  - AUTO 약 60fps, LOW SPEC 30fps 이상
+  - LOW SPEC에서도 NORMAL/HARD 회랑 경로 식별 가능
+  - 단계 클리어 뒤 이미지 복사와 PNG 다운로드 정상
+  - 공개 URL: https://jtech-co.github.io/Moth-in-the-Machine/
 
 ## 현재 제약
 
-- 500 kB 초과 lazy SceneCanvas 경고는 M4 기준선에서 이어 기록하고 M9 LCP/번들 최적화 게이트에서 재검토
-
-- M8 수동 게이트까지 완료했으며, M9은 아직 시작하지 않음
+- raw `vendor-three` 청크의 500 kB 초과 Vite 경고는 남아 있으나 초기·lazy·전체 gzip 자동 예산과 배포 LCP 3초 게이트로 통제
+- M1–M9 정식 하네스 마일스톤 완료
 
 ## 미결 질문
 
-- 현재 없음. M9 요구사항은 하네스의 통합·성능·배포 게이트를 기준으로 착수 시 재확인
+- 현재 없음. 터치 입력·선택 사운드·리더보드는 완료를 막지 않는 선택적 후속 후보
 
 ## 결정 로그
 
@@ -198,3 +225,8 @@ M8 — 결과 화면 & 공유 이미지 완료 (2026-08-14 실제 브라우저 �
 | 2026-08-14 | HUD 회귀 수정 재검수 통과로 M7 완료 및 커밋·푸시 승인                     | 실제 플레이에서 stage·health·timer·minimap UI와 피격 오버레이 정상 표시 확인                |
 | 2026-08-14 | 결과 스냅샷에서 불변 `ResultPresentation`을 파생해 화면·텍스트·PNG에 공유 | terminal 이후 값 변화나 서로 다른 포매팅으로 결과 표시가 어긋나는 회귀를 방지               |
 | 2026-08-14 | M8 실제 브라우저 공유 기능 검수 통과 및 완료·커밋·푸시 승인               | 다운로드 해상도·로그북 시각·clipboard paste·terminal 입력·반응형 동작이 모두 정상임을 확인  |
+| 2026-08-21 | GitHub Pages와 `/Moth-in-the-Machine/` base를 정식 배포 대상으로 채택     | 설치 없는 공개 URL과 저장소 하위 경로 asset 로딩을 함께 보장                                |
+| 2026-08-21 | AUTO/LOW SPEC 명시적 품질 정책과 영속 설정을 채택                         | 데스크톱 60fps 경험과 저사양 30fps·회랑 가시성을 사용자가 직접 선택하고 유지                |
+| 2026-08-21 | 초기 HTML 셸·코드 분할·번들/Lighthouse 자동 예산을 릴리스 게이트로 채택   | 단순 청크 분할이 아닌 초기 로딩·총 전송량·실제 LCP 회귀를 차단                              |
+| 2026-08-21 | 선택 사운드를 이번 경량 릴리스에서 제외                                   | 필수 기능이 아니며 신규 asset·autoplay·성능 위험을 후속 범위와 분리                         |
+| 2026-08-21 | 실제 Pages 수동 게이트 통과로 M9과 정식 하네스 완료                       | 품질 전환·영속화·FPS·저사양 가시성·clipboard·PNG 공유를 공개 URL에서 확인                   |
